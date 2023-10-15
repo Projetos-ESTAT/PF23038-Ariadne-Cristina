@@ -33,7 +33,7 @@ library(grid)
 library(ExpDes.pt)
 library(easyanova)
 
-' o experimento foi conduzido em delineamento em blocos casualizados com cinco repetições '
+' o experimento foi conduzido em delineamento em blocos casualizados com 15 repetições '
 
 ' espécie da planta como um segundo fator, está sob controle do pesquisador e 
 para o qual diferentes níveis ou condições são deliberadamente estabelecidos a 
@@ -77,8 +77,10 @@ attach(dados)
 X="";Y=""
 
 ' foi necessária a transformação dos dados (logarítmica) para que os pressupostos fossem atendidos,
-essa transformação é indicada para variáveis contínuas positivas e diferentes de zero. 
-Variáveis biológicas tem distribuição log-normal '
+essa transformação é indicada para variáveis contínuas positivas e diferentes de zero. '
+
+'É sabido que muitas variáveis biológicas tem distribuição log-normal. Desta forma, 
+após a transformação logarítmica, os valores passam a ter distribuição normal.'
 
 ' logarítmica (para corrigir distribuições assimétricas e para remover a dependência
 entre média e variância, além de homogeneizar variâncias entre grupos), a escala de valores 
@@ -110,7 +112,6 @@ par(cex=0.7)
 caixas=with(dados, car::Boxplot(resp ~ F1*F2, vertical=T,las=1, col='Lightyellow',
                                 xlab=X, ylab=Y))
 
-
 ###### INTERAÇÃO ######
 
 with(dados, interaction.plot(F2, F1, resp, las=1, col=1:17, bty='l', 
@@ -124,7 +125,6 @@ with(dados, interaction.plot(F1, F2, resp, las=1, col=1:17, bty='l',
 
 mod = with(dados, aov(resp~F1*F2+bloco))
 anova(mod)
-# summary(mod)
 
 ###### PRESSUPOSTOS ######
 
@@ -139,7 +139,6 @@ with(dados, leveneTest(mod$residuals~grupos))
 
 # independência
 
-(ind=lmtest::dwtest(mod))
 plot(mod$residuals)
 
 ###### TESTE DE TUKEY  ######
@@ -149,6 +148,249 @@ plot(mod$residuals)
 (comparacao <- ea2(dados, design=2)) # fatorial duplo em blocos casualizados
 
 ############### Ca ###############
+
+F1=as.factor(tratamentos)
+F2=as.factor(especies)
+bloco=as.factor(bloco)
+Trat=paste(F1,F2)
+dados=data.frame(F1,F2,bloco,resp=Ca)
+attach(dados)
+X="";Y=""
+
+dados$resp <- log(dados$resp)
+
+###### ANÁLISE EXPLORATÓRIA ######
+
+# fator 1 (tartamento)
+par(bty='l', mai=c(1, 1, .2, .2))
+par(cex=0.7)
+caixas=with(dados, car::Boxplot(resp ~ F1, vertical=T,las=1, col='Lightyellow',
+                                xlab=X, ylab=Y))
+mediab=with(dados,tapply(resp, F1, mean))
+points(mediab, pch='+', cex=1.5, col='red')
+
+# fator 2 (especie)
+par(bty='l', mai=c(1, 1, .2, .2))
+par(cex=0.7)
+caixas=with(dados, car::Boxplot(resp ~ F2, vertical=T,las=1, col='Lightyellow',
+                                xlab=X, ylab=Y))
+mediab=with(dados,tapply(resp, F2, mean))
+points(mediab, pch='+', cex=1.5, col='red')
+
+# ambos os fatores
+par(bty='l', mai=c(1, 1, .2, .2))
+par(cex=0.7)
+caixas=with(dados, car::Boxplot(resp ~ F1*F2, vertical=T,las=1, col='Lightyellow',
+                                xlab=X, ylab=Y))
+
+###### MODELO ######
+mod = with(dados, aov(resp~F1*F2+bloco))
+anova(mod)
+
+###### PRESSUPOSTOS ######
+
+# normalidade
+(norm=shapiro.test(mod$res))
+
+# homogeneidade
+with(dados, leveneTest(mod$residuals~F1))
+with(dados, leveneTest(mod$residuals~F2))
+grupos <- interaction(dados$F1, dados$F2)
+with(dados, leveneTest(mod$residuals~grupos))
+
+# independência
+
+plot(mod$residuals)
+
+###### TESTE DE TUKEY  ######
+
+(comparacao <- ea2(dados, design=2))
+
+############### Mg ###############
+
+' A HOMOGENEIDADE DO FATOR 2 NÃO FOI ATENDIDA, oq pode ser?? 
+A transformação nao ajuda '
+
+F1=as.factor(tratamentos)
+F2=as.factor(especies)
+bloco=as.factor(bloco)
+Trat=paste(F1,F2)
+dados=data.frame(F1,F2,bloco,resp=Mg)
+attach(dados)
+X="";Y=""
+
+# dados$resp <- log(dados$resp)
+
+###### ANÁLISE EXPLORATÓRIA ######
+
+# fator 1 (tartamento)
+par(bty='l', mai=c(1, 1, .2, .2))
+par(cex=0.7)
+caixas=with(dados, car::Boxplot(resp ~ F1, vertical=T,las=1, col='Lightyellow',
+                                xlab=X, ylab=Y))
+mediab=with(dados,tapply(resp, F1, mean))
+points(mediab, pch='+', cex=1.5, col='red')
+
+# fator 2 (especie)
+par(bty='l', mai=c(1, 1, .2, .2))
+par(cex=0.7)
+caixas=with(dados, car::Boxplot(resp ~ F2, vertical=T,las=1, col='Lightyellow',
+                                xlab=X, ylab=Y))
+mediab=with(dados,tapply(resp, F2, mean))
+points(mediab, pch='+', cex=1.5, col='red')
+
+# ambos os fatores
+par(bty='l', mai=c(1, 1, .2, .2))
+par(cex=0.7)
+caixas=with(dados, car::Boxplot(resp ~ F1*F2, vertical=T,las=1, col='Lightyellow',
+                                xlab=X, ylab=Y))
+
+###### MODELO ######
+mod = with(dados, aov(resp~F1*F2+bloco))
+anova(mod)
+
+###### PRESSUPOSTOS ######
+
+# normalidade
+(norm=shapiro.test(mod$res))
+
+# homogeneidade
+with(dados, leveneTest(mod$residuals~F1))
+with(dados, leveneTest(mod$residuals~F2))
+grupos <- interaction(dados$F1, dados$F2)
+with(dados, leveneTest(mod$residuals~grupos))
+
+# independência
+
+plot(mod$residuals)
+
+############### N ###############
+
+' PRESSSUPOSTO DE NORMALIDADE NÃO ATENDIDO '
+
+F1=as.factor(tratamentos)
+F2=as.factor(especies)
+bloco=as.factor(bloco)
+Trat=paste(F1,F2)
+dados=data.frame(F1,F2,bloco,resp=N)
+attach(dados)
+X="";Y=""
+
+# dados$resp <- log(dados$resp + 2)
+
+' N possui valores negativos, uma saída é adicionar uma constante a cada número 
+para torná-lo positivo e não zero. Adicionei 2.
+
+No entanto, a normalidade não foi atendida mesmo assim '
+
+###### ANÁLISE EXPLORATÓRIA ######
+
+# fator 1 (tartamento)
+par(bty='l', mai=c(1, 1, .2, .2))
+par(cex=0.7)
+caixas=with(dados, car::Boxplot(resp ~ F1, vertical=T,las=1, col='Lightyellow',
+                                xlab=X, ylab=Y))
+mediab=with(dados,tapply(resp, F1, mean))
+points(mediab, pch='+', cex=1.5, col='red')
+
+# fator 2 (especie)
+par(bty='l', mai=c(1, 1, .2, .2))
+par(cex=0.7)
+caixas=with(dados, car::Boxplot(resp ~ F2, vertical=T,las=1, col='Lightyellow',
+                                xlab=X, ylab=Y))
+mediab=with(dados,tapply(resp, F2, mean))
+points(mediab, pch='+', cex=1.5, col='red')
+
+# ambos os fatores
+par(bty='l', mai=c(1, 1, .2, .2))
+par(cex=0.7)
+caixas=with(dados, car::Boxplot(resp ~ F1*F2, vertical=T,las=1, col='Lightyellow',
+                                xlab=X, ylab=Y))
+
+###### MODELO ######
+mod = with(dados, aov(resp~F1*F2+bloco))
+anova(mod)
+
+###### PRESSUPOSTOS ######
+
+# normalidade
+(norm=shapiro.test(mod$res))
+
+# homogeneidade
+with(dados, leveneTest(mod$residuals~F1))
+with(dados, leveneTest(mod$residuals~F2))
+grupos <- interaction(dados$F1, dados$F2)
+with(dados, leveneTest(mod$residuals~grupos))
+
+# independência
+
+plot(mod$residuals)
+
+############### P ###############
+
+F1=as.factor(tratamentos)
+F2=as.factor(especies)
+bloco=as.factor(bloco)
+Trat=paste(F1,F2)
+dados=data.frame(F1,F2,bloco,resp=P)
+attach(dados)
+X="";Y=""
+
+# dados$resp <- log(dados$resp)
+
+###### ANÁLISE EXPLORATÓRIA ######
+
+# fator 1 (tartamento)
+par(bty='l', mai=c(1, 1, .2, .2))
+par(cex=0.7)
+caixas=with(dados, car::Boxplot(resp ~ F1, vertical=T,las=1, col='Lightyellow',
+                                xlab=X, ylab=Y))
+mediab=with(dados,tapply(resp, F1, mean))
+points(mediab, pch='+', cex=1.5, col='red')
+
+# fator 2 (especie)
+par(bty='l', mai=c(1, 1, .2, .2))
+par(cex=0.7)
+caixas=with(dados, car::Boxplot(resp ~ F2, vertical=T,las=1, col='Lightyellow',
+                                xlab=X, ylab=Y))
+mediab=with(dados,tapply(resp, F2, mean))
+points(mediab, pch='+', cex=1.5, col='red')
+
+# ambos os fatores
+par(bty='l', mai=c(1, 1, .2, .2))
+par(cex=0.7)
+caixas=with(dados, car::Boxplot(resp ~ F1*F2, vertical=T,las=1, col='Lightyellow',
+                                xlab=X, ylab=Y))
+
+###### MODELO ######
+mod = with(dados, aov(resp~F1*F2+bloco))
+anova(mod)
+
+###### PRESSUPOSTOS ######
+
+# normalidade
+(norm=shapiro.test(mod$res))
+
+# homogeneidade
+with(dados, leveneTest(mod$residuals~F1))
+with(dados, leveneTest(mod$residuals~F2))
+grupos <- interaction(dados$F1, dados$F2)
+with(dados, leveneTest(mod$residuals~grupos))
+
+# independência
+
+plot(mod$residuals)
+
+
+
+
+
+
+
+
+
+
+
 
 
 
