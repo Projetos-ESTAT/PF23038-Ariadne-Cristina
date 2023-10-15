@@ -328,6 +328,8 @@ plot(mod$residuals)
 
 ############### P ###############
 
+' PRESSSUPOSTO DE NORMALIDADE NÃO ATENDIDO '
+
 F1=as.factor(tratamentos)
 F2=as.factor(especies)
 bloco=as.factor(bloco)
@@ -336,7 +338,7 @@ dados=data.frame(F1,F2,bloco,resp=P)
 attach(dados)
 X="";Y=""
 
-# dados$resp <- log(dados$resp)
+ dados$resp <- log(dados$resp)
 
 ###### ANÁLISE EXPLORATÓRIA ######
 
@@ -381,32 +383,53 @@ with(dados, leveneTest(mod$residuals~grupos))
 
 plot(mod$residuals)
 
-
-
-
-
-
-
-
-
-
-
-
-
-
 ############################## FOTOSSÍNTESE CERRADO: ##############################
 
 fotossintese<- read_excel('Cerrado.xlsx', sheet = 2)
 parcelas <- fotossintese$Site
-unique(parcelas) # 3, 11, 19 queimados e 1,9, 17 não queimados
+parcelas <- parcelas[seq(1, length(parcelas), by = 3)]
 especies<- fotossintese$species
 especies <- especies[seq(1, length(especies), by = 3)]
 tratamentos<- fotossintese$Treatments
-E<- fotossintese$E
-gs<- fotossintese$gs
-A<- fotossintese$A
-EIUA<- fotossintese$EIUA
+tratamentos <- tratamentos[seq(1, length(tratamentos), by = 3)]
 
 ' foram realizadas 3 medidas em 3 folhas do mesmo indivíduo (considerar a média?) '
 
-table(fotossintese$Site, fotossintese$species)
+E<- fotossintese$E
+num_conjuntos <- length(E) / 3
+Emedio <- numeric(num_conjuntos)
+for (i in 1:num_conjuntos) {
+  inicio <- (i - 1) * 3 + 1
+  fim <- i * 3
+  Emedio[i] <- mean(E[inicio:fim])
+}
+
+gs<- fotossintese$gs
+num_conjuntos <- length(gs) / 3
+gsmedio <- numeric(num_conjuntos)
+for (i in 1:num_conjuntos) {
+  inicio <- (i - 1) * 3 + 1
+  fim <- i * 3
+  gsmedio[i] <- mean(gs[inicio:fim])
+}
+
+A<- fotossintese$A
+num_conjuntos <- length(A) / 3
+Amedio <- numeric(num_conjuntos)
+for (i in 1:num_conjuntos) {
+  inicio <- (i - 1) * 3 + 1
+  fim <- i * 3
+  Amedio[i] <- mean(A[inicio:fim])
+}
+
+EIUA<- fotossintese$EIUA
+num_conjuntos <- length(gs) / 3
+EIUAmedio <- numeric(num_conjuntos)
+for (i in 1:num_conjuntos) {
+  inicio <- (i - 1) * 3 + 1
+  fim <- i * 3
+  EIUAmedio[i] <- mean(EIUA[inicio:fim])
+}
+
+
+
