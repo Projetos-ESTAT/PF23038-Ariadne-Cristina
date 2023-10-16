@@ -103,38 +103,39 @@ ggplot(dados) +
   ) +
   labs(x = "Tratamento", y = "K (g.kg-1)") +
   theme_estat()
-#ggsave("box_bi.pdf", width = 158, height = 93, units = "mm")
+#ggsave("KboxTrat.pdf", width = 158, height = 93, units = "mm")
 
-
-par(bty='l', mai=c(1, 1, .2, .2))
-par(cex=0.7)
-caixas=with(dados, car::Boxplot(resp ~ F1, vertical=T,las=1, col='Lightyellow',
-                                xlab=X, ylab=Y))
-mediab=with(dados,tapply(resp, F1, mean))
-points(mediab, pch='+', cex=1.5, col='red')
 
 # fator 2 (especie)
-par(bty='l', mai=c(1, 1, .2, .2))
-par(cex=0.7)
-caixas=with(dados, car::Boxplot(resp ~ F2, vertical=T,las=1, col='Lightyellow',
-                                xlab=X, ylab=Y))
-mediab=with(dados,tapply(resp, F2, mean))
-points(mediab, pch='+', cex=1.5, col='red')
+
+ggplot(dados) +
+  aes(
+    x = F2,
+    y = resp
+  ) +
+  geom_boxplot(fill = c("#A11D21"), width = 0.5) +
+  stat_summary(
+    fun = "mean", geom = "point", shape = 23, size = 3, fill = "white"
+  ) +
+  labs(x = "Espécie", y = "K (g.kg-1)") +
+  theme_estat()
+#ggsave("KboxEsp.pdf", width = 158, height = 93, units = "mm")
 
 # ambos os fatores
-par(bty='l', mai=c(1, 1, .2, .2))
-par(cex=0.7)
-caixas=with(dados, car::Boxplot(resp ~ F1*F2, vertical=T,las=1, col='Lightyellow',
-                                xlab=X, ylab=Y))
 
-###### INTERAÇÃO ######
-
-with(dados, interaction.plot(F2, F1, resp, las=1, col=1:17, bty='l', 
-                             xlab='', ylab='K', trace.label="FATOR1"))
-
-# FATOR1 e FATOR2
-with(dados, interaction.plot(F1, F2, resp, las=1, col=1:17, bty='l', 
-                             xlab='', ylab='K', trace.label="FATOR2"))
+ggplot(dados) +
+  aes(
+    x = F1:F2,
+    y = resp
+  ) +
+  geom_boxplot(fill = c("#A11D21"), width = 0.5) +
+  stat_summary(
+    fun = "mean", geom = "point", shape = 23, size = 3, fill = "white"
+  ) +
+  labs(x = "Interação", y = "K (g.kg-1)") +
+  theme_estat()+
+  coord_flip()
+#ggsave("KboxInt.pdf", width = 158, height = 93, units = "mm")
 
 ###### MODELO ######
 
@@ -153,8 +154,15 @@ grupos <- interaction(dados$F1, dados$F2)
 with(dados, leveneTest(mod$residuals~grupos))
 
 # independência
+resíduos <- mod$residuals
+data<-as.data.frame(resíduos)
+ggplot(data) +
+  aes(x = 1:length(resíduos), y=resíduos) +
+  geom_point(colour = "#A11D21", size = 3) +
+  labs(x = "Observação", y = "Resíduos") +
+  theme_estat()
+#ggsave("Kplot.pdf", width = 158, height = 93, units = "mm")
 
-plot(mod$residuals)
 
 ###### TESTE DE TUKEY  ######
 
