@@ -90,7 +90,22 @@ dados$resp <- log(dados$resp)
 
 ###### ANÁLISE EXPLORATÓRIA ######
 
-# fator 1 (tartamento)
+# fator 1 (tratamento)
+
+ggplot(dados) +
+  aes(
+    x = F1,
+    y = resp
+  ) +
+  geom_boxplot(fill = c("#A11D21"), width = 0.5) +
+  stat_summary(
+    fun = "mean", geom = "point", shape = 23, size = 3, fill = "white"
+  ) +
+  labs(x = "Tratamento", y = "K (g.kg-1)") +
+  theme_estat()
+#ggsave("box_bi.pdf", width = 158, height = 93, units = "mm")
+
+
 par(bty='l', mai=c(1, 1, .2, .2))
 par(cex=0.7)
 caixas=with(dados, car::Boxplot(resp ~ F1, vertical=T,las=1, col='Lightyellow',
@@ -431,5 +446,62 @@ for (i in 1:num_conjuntos) {
   EIUAmedio[i] <- mean(EIUA[inicio:fim])
 }
 
+############### E ###############
 
+F1=as.factor(tratamentos)
+F2=as.factor(especies)
+bloco=as.factor(parcelas)
+Trat=paste(F1,F2)
+dados=data.frame(F1,F2,bloco,resp=E)
+attach(dados)
+X="";Y=""
+
+dados$resp <- log(dados$resp)
+
+###### ANÁLISE EXPLORATÓRIA ######
+
+# fator 1 (tartamento)
+par(bty='l', mai=c(1, 1, .2, .2))
+par(cex=0.7)
+caixas=with(dados, car::Boxplot(resp ~ F1, vertical=T,las=1, col='Lightyellow',
+                                xlab=X, ylab=Y))
+mediab=with(dados,tapply(resp, F1, mean))
+points(mediab, pch='+', cex=1.5, col='red')
+
+# fator 2 (especie)
+par(bty='l', mai=c(1, 1, .2, .2))
+par(cex=0.7)
+caixas=with(dados, car::Boxplot(resp ~ F2, vertical=T,las=1, col='Lightyellow',
+                                xlab=X, ylab=Y))
+mediab=with(dados,tapply(resp, F2, mean))
+points(mediab, pch='+', cex=1.5, col='red')
+
+# ambos os fatores
+par(bty='l', mai=c(1, 1, .2, .2))
+par(cex=0.7)
+caixas=with(dados, car::Boxplot(resp ~ F1*F2, vertical=T,las=1, col='Lightyellow',
+                                xlab=X, ylab=Y))
+
+###### MODELO ######
+mod = with(dados, aov(resp~F1*F2+bloco))
+anova(mod)
+
+###### PRESSUPOSTOS ######
+
+# normalidade
+(norm=shapiro.test(mod$res))
+
+# homogeneidade
+with(dados, leveneTest(mod$residuals~F1))
+with(dados, leveneTest(mod$residuals~F2))
+grupos <- interaction(dados$F1, dados$F2)
+with(dados, leveneTest(mod$residuals~grupos))
+
+# independência
+
+plot(mod$residuals)
+
+###### TESTE DE TUKEY  ######
+
+(comparacao <- ea2(dados, design=2))
 
