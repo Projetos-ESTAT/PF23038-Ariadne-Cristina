@@ -273,6 +273,8 @@ dados=data.frame(F1,F2,bloco,resp=Mg)
 attach(dados)
 X="";Y=""
 
+summary(dados$resp)
+
 dados$resp <- log(dados$resp)
 
 ###### ANÁLISE EXPLORATÓRIA ######
@@ -378,26 +380,50 @@ No entanto, a normalidade não foi atendida mesmo assim '
 ###### ANÁLISE EXPLORATÓRIA ######
 
 # fator 1 (tartamento)
-par(bty='l', mai=c(1, 1, .2, .2))
-par(cex=0.7)
-caixas=with(dados, car::Boxplot(resp ~ F1, vertical=T,las=1, col='Lightyellow',
-                                xlab=X, ylab=Y))
-mediab=with(dados,tapply(resp, F1, mean))
-points(mediab, pch='+', cex=1.5, col='red')
+ggplot(dados) +
+  aes(
+    x = F1,
+    y = resp
+  ) +
+  geom_boxplot(fill = c("#A11D21"), width = 0.5) +
+  stat_summary(
+    fun = "mean", geom = "point", shape = 23, size = 3, fill = "white"
+  ) +
+  labs(x = "Treatment", y = "N (g.kg-1)") +
+  scale_x_discrete(labels=c('Burned', 'Unburned'))+
+  theme_estat()
+#ggsave("NboxTrat.pdf", width = 158, height = 93, units = "mm")
+
 
 # fator 2 (especie)
-par(bty='l', mai=c(1, 1, .2, .2))
-par(cex=0.7)
-caixas=with(dados, car::Boxplot(resp ~ F2, vertical=T,las=1, col='Lightyellow',
-                                xlab=X, ylab=Y))
-mediab=with(dados,tapply(resp, F2, mean))
-points(mediab, pch='+', cex=1.5, col='red')
+ggplot(dados) +
+  aes(
+    x = F2,
+    y = resp
+  ) +
+  geom_boxplot(fill = c("#A11D21"), width = 0.5) +
+  stat_summary(
+    fun = "mean", geom = "point", shape = 23, size = 3, fill = "white"
+  ) +
+  labs(x = "Specie", y = "N (g.kg-1)")+
+  theme_estat()
+#ggsave("NboxEsp.pdf", width = 158, height = 93, units = "mm")
 
-# ambos os fatores
-par(bty='l', mai=c(1, 1, .2, .2))
-par(cex=0.7)
-caixas=with(dados, car::Boxplot(resp ~ F1*F2, vertical=T,las=1, col='Lightyellow',
-                                xlab=X, ylab=Y))
+# ambos os fatores (organizar em painel pra ficar mais claro)
+
+ggplot(dados) +
+  aes(
+    x = F1:F2,
+    y = resp
+  ) +
+  geom_boxplot(fill = c("#A11D21"), width = 0.5) +
+  stat_summary(
+    fun = "mean", geom = "point", shape = 23, size = 3, fill = "white"
+  ) +
+  labs(x = "Interação", y = "N (g.kg-1)") +
+  theme_estat()+
+  coord_flip()
+#ggsave("NboxInt.pdf", width = 158, height = 93, units = "mm")
 
 ###### MODELO ######
 mod = with(dados, aov(resp~F1*F2+bloco))
@@ -416,7 +442,15 @@ with(dados, leveneTest(mod$residuals~grupos))
 
 # independência
 
-plot(mod$residuals)
+resíduos <- mod$residuals
+data<-as.data.frame(resíduos)
+ggplot(data) +
+  aes(x = 1:length(resíduos), y=resíduos) +
+  geom_point(colour = "#A11D21", size = 3) +
+  labs(x = "Observation", y = "Residuals") +
+  theme_estat()
+#ggsave("Nplot.pdf", width = 158, height = 93, units = "mm")
+
 
 ############### P ###############
 
@@ -430,32 +464,56 @@ dados=data.frame(F1,F2,bloco,resp=P)
 attach(dados)
 X="";Y=""
 
- dados$resp <- log(dados$resp)
+dados$resp <- log(dados$resp)
 
 ###### ANÁLISE EXPLORATÓRIA ######
 
 # fator 1 (tartamento)
-par(bty='l', mai=c(1, 1, .2, .2))
-par(cex=0.7)
-caixas=with(dados, car::Boxplot(resp ~ F1, vertical=T,las=1, col='Lightyellow',
-                                xlab=X, ylab=Y))
-mediab=with(dados,tapply(resp, F1, mean))
-points(mediab, pch='+', cex=1.5, col='red')
-
-# fator 2 (especie)
-par(bty='l', mai=c(1, 1, .2, .2))
-par(cex=0.7)
-caixas=with(dados, car::Boxplot(resp ~ F2, vertical=T,las=1, col='Lightyellow',
-                                xlab=X, ylab=Y))
-mediab=with(dados,tapply(resp, F2, mean))
-points(mediab, pch='+', cex=1.5, col='red')
-
-# ambos os fatores
-par(bty='l', mai=c(1, 1, .2, .2))
-par(cex=0.7)
-caixas=with(dados, car::Boxplot(resp ~ F1*F2, vertical=T,las=1, col='Lightyellow',
-                                xlab=X, ylab=Y))
-
+ ggplot(dados) +
+   aes(
+     x = F1,
+     y = resp
+   ) +
+   geom_boxplot(fill = c("#A11D21"), width = 0.5) +
+   stat_summary(
+     fun = "mean", geom = "point", shape = 23, size = 3, fill = "white"
+   ) +
+   labs(x = "Treatment", y = "P (g.kg-1)") +
+   scale_x_discrete(labels=c('Burned', 'Unburned'))+
+   theme_estat()
+#ggsave("PboxTrat.pdf", width = 158, height = 93, units = "mm")
+ 
+ 
+ # fator 2 (especie)
+ ggplot(dados) +
+   aes(
+     x = F2,
+     y = resp
+   ) +
+   geom_boxplot(fill = c("#A11D21"), width = 0.5) +
+   stat_summary(
+     fun = "mean", geom = "point", shape = 23, size = 3, fill = "white"
+   ) +
+   labs(x = "Specie", y = "P (g.kg-1)")+
+   theme_estat()
+#ggsave("PboxEsp.pdf", width = 158, height = 93, units = "mm")
+ 
+ # ambos os fatores (organizar em painel pra ficar mais claro)
+ 
+ ggplot(dados) +
+   aes(
+     x = F1:F2,
+     y = resp
+   ) +
+   geom_boxplot(fill = c("#A11D21"), width = 0.5) +
+   stat_summary(
+     fun = "mean", geom = "point", shape = 23, size = 3, fill = "white"
+   ) +
+   labs(x = "Interação", y = "P (g.kg-1)") +
+   theme_estat()+
+   coord_flip()
+ #ggsave("PboxInt.pdf", width = 158, height = 93, units = "mm")
+ 
 ###### MODELO ######
 mod = with(dados, aov(resp~F1*F2+bloco))
 anova(mod)
@@ -473,7 +531,14 @@ with(dados, leveneTest(mod$residuals~grupos))
 
 # independência
 
-plot(mod$residuals)
+resíduos <- mod$residuals
+data<-as.data.frame(resíduos)
+ggplot(data) +
+  aes(x = 1:length(resíduos), y=resíduos) +
+  geom_point(colour = "#A11D21", size = 3) +
+  labs(x = "Observation", y = "Residuals") +
+  theme_estat()
+#ggsave("Pplot.pdf", width = 158, height = 93, units = "mm")
 
 ############################## FOTOSSÍNTESE CERRADO: ##############################
 
@@ -537,6 +602,52 @@ dados$resp <- log(dados$resp)
 
 ###### ANÁLISE EXPLORATÓRIA ######
 
+# fator 1 (tartamento)
+ggplot(dados) +
+  aes(
+    x = F1,
+    y = resp
+  ) +
+  geom_boxplot(fill = c("#A11D21"), width = 0.5) +
+  stat_summary(
+    fun = "mean", geom = "point", shape = 23, size = 3, fill = "white"
+  ) +
+  labs(x = "Treatment", y = "Leaf Transpiration (E)") +
+  scale_x_discrete(labels=c('Burned', 'Unburned'))+
+  theme_estat()
+#ggsave("EboxTrat.pdf", width = 158, height = 93, units = "mm")
+
+
+# fator 2 (especie)
+ggplot(dados) +
+  aes(
+    x = F2,
+    y = resp
+  ) +
+  geom_boxplot(fill = c("#A11D21"), width = 0.5) +
+  stat_summary(
+    fun = "mean", geom = "point", shape = 23, size = 3, fill = "white"
+  ) +
+  labs(x = "Specie", y = "Leaf Transpiration (E)")+
+  theme_estat()
+# ggsave("EboxEsp.pdf", width = 158, height = 93, units = "mm")
+
+# ambos os fatores (organizar em painel pra ficar mais claro)
+
+ggplot(dados) +
+  aes(
+    x = F1:F2,
+    y = resp
+  ) +
+  geom_boxplot(fill = c("#A11D21"), width = 0.5) +
+  stat_summary(
+    fun = "mean", geom = "point", shape = 23, size = 3, fill = "white"
+  ) +
+  labs(x = "Interação", y = "Leaf Transpiration (E)") +
+  theme_estat()+
+  coord_flip()
+#ggsave("EboxInt.pdf", width = 158, height = 93, units = "mm")
+
 
 ###### MODELO ######
 mod = with(dados, aov(resp~F1*F2+bloco))
@@ -555,7 +666,15 @@ with(dados, leveneTest(mod$residuals~grupos))
 
 # independência
 
-plot(mod$residuals)
+resíduos <- mod$residuals
+data<-as.data.frame(resíduos)
+ggplot(data) +
+  aes(x = 1:length(resíduos), y=resíduos) +
+  geom_point(colour = "#A11D21", size = 3) +
+  labs(x = "Observation", y = "Residuals") +
+  theme_estat()
+#ggsave("Eplot.pdf", width = 158, height = 93, units = "mm")
+
 
 ###### TESTE DE TUKEY  ######
 
