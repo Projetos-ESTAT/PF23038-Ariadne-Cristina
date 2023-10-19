@@ -32,6 +32,7 @@ library(gridExtra)
 library(grid)
 library(ExpDes.pt)
 library(easyanova)
+library(xtable)
 
 ' o experimento foi conduzido em delineamento em blocos casualizados com 15 repetições '
 
@@ -63,8 +64,6 @@ Ca<-nutrientes$`Ca(g.kg-1)`
 Mg<- nutrientes$`Mg(g.kg-1)`
 N<- nutrientes$`N(G.KG-1)`
 P<- nutrientes$`P(g.kg-1)`
-
-unique(especies)
 
 ############### K ###############
 
@@ -101,9 +100,10 @@ ggplot(dados) +
   stat_summary(
     fun = "mean", geom = "point", shape = 23, size = 3, fill = "white"
   ) +
-  labs(x = "Tratamento", y = "K (g.kg-1)") +
+  labs(x = "Treatment", y = "K (g.kg-1)") +
+  scale_x_discrete(labels=c('Burned', 'Unburned'))+
   theme_estat()
-#ggsave("KboxTrat.pdf", width = 158, height = 93, units = "mm")
+#ggsave("KboxTrat1.pdf", width = 158, height = 93, units = "mm")
 
 
 # fator 2 (especie)
@@ -117,11 +117,11 @@ ggplot(dados) +
   stat_summary(
     fun = "mean", geom = "point", shape = 23, size = 3, fill = "white"
   ) +
-  labs(x = "Espécie", y = "K (g.kg-1)") +
+  labs(x = "Specie", y = "K (g.kg-1)")+
   theme_estat()
-#ggsave("KboxEsp.pdf", width = 158, height = 93, units = "mm")
+#ggsave("KboxEsp1.pdf", width = 158, height = 93, units = "mm")
 
-# ambos os fatores
+# ambos os fatores (organizar em painel pra ficar mais claro)
 
 ggplot(dados) +
   aes(
@@ -159,7 +159,7 @@ data<-as.data.frame(resíduos)
 ggplot(data) +
   aes(x = 1:length(resíduos), y=resíduos) +
   geom_point(colour = "#A11D21", size = 3) +
-  labs(x = "Observação", y = "Resíduos") +
+  labs(x = "Observation", y = "Residuals") +
   theme_estat()
 #ggsave("Kplot.pdf", width = 158, height = 93, units = "mm")
 
@@ -185,26 +185,50 @@ dados$resp <- log(dados$resp)
 ###### ANÁLISE EXPLORATÓRIA ######
 
 # fator 1 (tartamento)
-par(bty='l', mai=c(1, 1, .2, .2))
-par(cex=0.7)
-caixas=with(dados, car::Boxplot(resp ~ F1, vertical=T,las=1, col='Lightyellow',
-                                xlab=X, ylab=Y))
-mediab=with(dados,tapply(resp, F1, mean))
-points(mediab, pch='+', cex=1.5, col='red')
+ggplot(dados) +
+  aes(
+    x = F1,
+    y = resp
+  ) +
+  geom_boxplot(fill = c("#A11D21"), width = 0.5) +
+  stat_summary(
+    fun = "mean", geom = "point", shape = 23, size = 3, fill = "white"
+  ) +
+  labs(x = "Treatment", y = "Ca (g.kg-1)") +
+  scale_x_discrete(labels=c('Burned', 'Unburned'))+
+  theme_estat()
+#ggsave("CaboxTrat1.pdf", width = 158, height = 93, units = "mm")
+
 
 # fator 2 (especie)
-par(bty='l', mai=c(1, 1, .2, .2))
-par(cex=0.7)
-caixas=with(dados, car::Boxplot(resp ~ F2, vertical=T,las=1, col='Lightyellow',
-                                xlab=X, ylab=Y))
-mediab=with(dados,tapply(resp, F2, mean))
-points(mediab, pch='+', cex=1.5, col='red')
+ggplot(dados) +
+  aes(
+    x = F2,
+    y = resp
+  ) +
+  geom_boxplot(fill = c("#A11D21"), width = 0.5) +
+  stat_summary(
+    fun = "mean", geom = "point", shape = 23, size = 3, fill = "white"
+  ) +
+  labs(x = "Specie", y = "Ca (g.kg-1)")+
+  theme_estat()
+#ggsave("CaboxEsp1.pdf", width = 158, height = 93, units = "mm")
 
-# ambos os fatores
-par(bty='l', mai=c(1, 1, .2, .2))
-par(cex=0.7)
-caixas=with(dados, car::Boxplot(resp ~ F1*F2, vertical=T,las=1, col='Lightyellow',
-                                xlab=X, ylab=Y))
+# ambos os fatores (organizar em painel pra ficar mais claro)
+
+ggplot(dados) +
+  aes(
+    x = F1:F2,
+    y = resp
+  ) +
+  geom_boxplot(fill = c("#A11D21"), width = 0.5) +
+  stat_summary(
+    fun = "mean", geom = "point", shape = 23, size = 3, fill = "white"
+  ) +
+  labs(x = "Interação", y = "Ca (g.kg-1)") +
+  theme_estat()+
+  coord_flip()
+#ggsave("CaboxInt.pdf", width = 158, height = 93, units = "mm")
 
 ###### MODELO ######
 mod = with(dados, aov(resp~F1*F2+bloco))
@@ -223,7 +247,14 @@ with(dados, leveneTest(mod$residuals~grupos))
 
 # independência
 
-plot(mod$residuals)
+resíduos <- mod$residuals
+data<-as.data.frame(resíduos)
+ggplot(data) +
+  aes(x = 1:length(resíduos), y=resíduos) +
+  geom_point(colour = "#A11D21", size = 3) +
+  labs(x = "Observation", y = "Residuals") +
+  theme_estat()
+#ggsave("Caplot.pdf", width = 158, height = 93, units = "mm")
 
 ###### TESTE DE TUKEY  ######
 
@@ -242,31 +273,55 @@ dados=data.frame(F1,F2,bloco,resp=Mg)
 attach(dados)
 X="";Y=""
 
-# dados$resp <- log(dados$resp)
+dados$resp <- log(dados$resp)
 
 ###### ANÁLISE EXPLORATÓRIA ######
 
 # fator 1 (tartamento)
-par(bty='l', mai=c(1, 1, .2, .2))
-par(cex=0.7)
-caixas=with(dados, car::Boxplot(resp ~ F1, vertical=T,las=1, col='Lightyellow',
-                                xlab=X, ylab=Y))
-mediab=with(dados,tapply(resp, F1, mean))
-points(mediab, pch='+', cex=1.5, col='red')
+ggplot(dados) +
+  aes(
+    x = F1,
+    y = resp
+  ) +
+  geom_boxplot(fill = c("#A11D21"), width = 0.5) +
+  stat_summary(
+    fun = "mean", geom = "point", shape = 23, size = 3, fill = "white"
+  ) +
+  labs(x = "Treatment", y = "Mg (g.kg-1)") +
+  scale_x_discrete(labels=c('Burned', 'Unburned'))+
+  theme_estat()
+#ggsave("MgboxTrat.pdf", width = 158, height = 93, units = "mm")
+
 
 # fator 2 (especie)
-par(bty='l', mai=c(1, 1, .2, .2))
-par(cex=0.7)
-caixas=with(dados, car::Boxplot(resp ~ F2, vertical=T,las=1, col='Lightyellow',
-                                xlab=X, ylab=Y))
-mediab=with(dados,tapply(resp, F2, mean))
-points(mediab, pch='+', cex=1.5, col='red')
+ggplot(dados) +
+  aes(
+    x = F2,
+    y = resp
+  ) +
+  geom_boxplot(fill = c("#A11D21"), width = 0.5) +
+  stat_summary(
+    fun = "mean", geom = "point", shape = 23, size = 3, fill = "white"
+  ) +
+  labs(x = "Specie", y = "Mg (g.kg-1)")+
+  theme_estat()
+#ggsave("MgboxEsp.pdf", width = 158, height = 93, units = "mm")
 
-# ambos os fatores
-par(bty='l', mai=c(1, 1, .2, .2))
-par(cex=0.7)
-caixas=with(dados, car::Boxplot(resp ~ F1*F2, vertical=T,las=1, col='Lightyellow',
-                                xlab=X, ylab=Y))
+# ambos os fatores (organizar em painel pra ficar mais claro)
+
+ggplot(dados) +
+  aes(
+    x = F1:F2,
+    y = resp
+  ) +
+  geom_boxplot(fill = c("#A11D21"), width = 0.5) +
+  stat_summary(
+    fun = "mean", geom = "point", shape = 23, size = 3, fill = "white"
+  ) +
+  labs(x = "Interação", y = "Mg (g.kg-1)") +
+  theme_estat()+
+  coord_flip()
+#ggsave("MgboxInt.pdf", width = 158, height = 93, units = "mm")
 
 ###### MODELO ######
 mod = with(dados, aov(resp~F1*F2+bloco))
@@ -284,8 +339,22 @@ grupos <- interaction(dados$F1, dados$F2)
 with(dados, leveneTest(mod$residuals~grupos))
 
 # independência
+resíduos <- mod$residuals
+data<-as.data.frame(resíduos)
+ggplot(data) +
+  aes(x = 1:length(resíduos), y=resíduos) +
+  geom_point(colour = "#A11D21", size = 3) +
+  labs(x = "Observation", y = "Residuals") +
+  theme_estat()
+#ggsave("Mgplot.pdf", width = 158, height = 93, units = "mm")
 
-plot(mod$residuals)
+###### TESTE DE FRIEDMAN  ######
+
+' alternativa não paramétrica para a ANOVA com blocos casualizados '
+
+# friedman.test ( resp , trat , bloco )
+# friedman.test ( resp ~ trat | bloco , data )
+
 
 ############### N ###############
 
@@ -410,49 +479,49 @@ plot(mod$residuals)
 
 fotossintese<- read_excel('Cerrado.xlsx', sheet = 2)
 parcelas <- fotossintese$Site
-parcelas <- parcelas[seq(1, length(parcelas), by = 3)]
+# parcelas <- parcelas[seq(1, length(parcelas), by = 3)]
 especies<- fotossintese$species
-especies <- especies[seq(1, length(especies), by = 3)]
+# especies <- especies[seq(1, length(especies), by = 3)]
 tratamentos<- fotossintese$Treatments
-tratamentos <- tratamentos[seq(1, length(tratamentos), by = 3)]
+# tratamentos <- tratamentos[seq(1, length(tratamentos), by = 3)]
 
 ' foram realizadas 3 medidas em 3 folhas do mesmo indivíduo (considerar a média?) '
 
 E<- fotossintese$E
-num_conjuntos <- length(E) / 3
-Emedio <- numeric(num_conjuntos)
-for (i in 1:num_conjuntos) {
-  inicio <- (i - 1) * 3 + 1
-  fim <- i * 3
-  Emedio[i] <- mean(E[inicio:fim])
-}
+# num_conjuntos <- length(E) / 3
+# Emedio <- numeric(num_conjuntos)
+# for (i in 1:num_conjuntos) {
+#   inicio <- (i - 1) * 3 + 1
+#   fim <- i * 3
+#   Emedio[i] <- mean(E[inicio:fim])
+# }
 
 gs<- fotossintese$gs
-num_conjuntos <- length(gs) / 3
-gsmedio <- numeric(num_conjuntos)
-for (i in 1:num_conjuntos) {
-  inicio <- (i - 1) * 3 + 1
-  fim <- i * 3
-  gsmedio[i] <- mean(gs[inicio:fim])
-}
+# num_conjuntos <- length(gs) / 3
+# gsmedio <- numeric(num_conjuntos)
+# for (i in 1:num_conjuntos) {
+#   inicio <- (i - 1) * 3 + 1
+#   fim <- i * 3
+#   gsmedio[i] <- mean(gs[inicio:fim])
+# }
 
 A<- fotossintese$A
-num_conjuntos <- length(A) / 3
-Amedio <- numeric(num_conjuntos)
-for (i in 1:num_conjuntos) {
-  inicio <- (i - 1) * 3 + 1
-  fim <- i * 3
-  Amedio[i] <- mean(A[inicio:fim])
-}
+# num_conjuntos <- length(A) / 3
+# Amedio <- numeric(num_conjuntos)
+# for (i in 1:num_conjuntos) {
+#   inicio <- (i - 1) * 3 + 1
+#   fim <- i * 3
+#   Amedio[i] <- mean(A[inicio:fim])
+# }
 
 EIUA<- fotossintese$EIUA
-num_conjuntos <- length(gs) / 3
-EIUAmedio <- numeric(num_conjuntos)
-for (i in 1:num_conjuntos) {
-  inicio <- (i - 1) * 3 + 1
-  fim <- i * 3
-  EIUAmedio[i] <- mean(EIUA[inicio:fim])
-}
+# num_conjuntos <- length(gs) / 3
+# EIUAmedio <- numeric(num_conjuntos)
+# for (i in 1:num_conjuntos) {
+#   inicio <- (i - 1) * 3 + 1
+#   fim <- i * 3
+#   EIUAmedio[i] <- mean(EIUA[inicio:fim])
+# }
 
 ############### E ###############
 
@@ -468,27 +537,6 @@ dados$resp <- log(dados$resp)
 
 ###### ANÁLISE EXPLORATÓRIA ######
 
-# fator 1 (tartamento)
-par(bty='l', mai=c(1, 1, .2, .2))
-par(cex=0.7)
-caixas=with(dados, car::Boxplot(resp ~ F1, vertical=T,las=1, col='Lightyellow',
-                                xlab=X, ylab=Y))
-mediab=with(dados,tapply(resp, F1, mean))
-points(mediab, pch='+', cex=1.5, col='red')
-
-# fator 2 (especie)
-par(bty='l', mai=c(1, 1, .2, .2))
-par(cex=0.7)
-caixas=with(dados, car::Boxplot(resp ~ F2, vertical=T,las=1, col='Lightyellow',
-                                xlab=X, ylab=Y))
-mediab=with(dados,tapply(resp, F2, mean))
-points(mediab, pch='+', cex=1.5, col='red')
-
-# ambos os fatores
-par(bty='l', mai=c(1, 1, .2, .2))
-par(cex=0.7)
-caixas=with(dados, car::Boxplot(resp ~ F1*F2, vertical=T,las=1, col='Lightyellow',
-                                xlab=X, ylab=Y))
 
 ###### MODELO ######
 mod = with(dados, aov(resp~F1*F2+bloco))
