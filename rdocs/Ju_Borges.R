@@ -33,6 +33,7 @@ library(grid)
 library(ExpDes.pt)
 library(easyanova)
 library(xtable)
+library(stats)
 
 ' o experimento foi conduzido em delineamento em blocos casualizados com 15 repetições '
 
@@ -72,6 +73,7 @@ F2=as.factor(especies)
 bloco=as.factor(bloco)
 Trat=paste(F1,F2)
 dados=data.frame(F1,F2,bloco,resp=K)
+dados$bloco[20] <- 3
 attach(dados)
 X="";Y=""
 
@@ -350,13 +352,16 @@ ggplot(data) +
   theme_estat()
 #ggsave("Mgplot.pdf", width = 158, height = 93, units = "mm")
 
-###### TESTE DE FRIEDMAN  ######
+###### TESTE DE COMPARAÇÃO DE MEDIAS  ######
 
-' alternativa não paramétrica para a ANOVA com blocos casualizados '
+' Friedman é a alternativa não paramétrica para a ANOVA com blocos casualizados '
 
-# friedman.test ( resp , trat , bloco )
-# friedman.test ( resp ~ trat | bloco , data )
-
+' O teste de Friedman não aceita repetições dentro do bloco. Por isso, será necessário agregar as repetições através de média. '
+dados = aggregate(dados$resp, 
+                     by = list(desb = dados$F1,
+                               bloco = dados$bloco), 
+                     FUN = mean)
+friedman.test(resp ~ desb | bloco, data = dados)
 
 ############### N ###############
 
@@ -680,3 +685,269 @@ ggplot(data) +
 
 (comparacao <- ea2(dados, design=2))
 
+############### gs ###############
+
+F1=as.factor(tratamentos)
+F2=as.factor(especies)
+bloco=as.factor(parcelas)
+Trat=paste(F1,F2)
+dados=data.frame(F1,F2,bloco,resp=gs)
+attach(dados)
+X="";Y=""
+
+dados$resp <- log(dados$resp)
+
+###### ANÁLISE EXPLORATÓRIA ######
+
+# fator 1 (tartamento)
+ggplot(dados) +
+  aes(
+    x = F1,
+    y = resp
+  ) +
+  geom_boxplot(fill = c("#A11D21"), width = 0.5) +
+  stat_summary(
+    fun = "mean", geom = "point", shape = 23, size = 3, fill = "white"
+  ) +
+  labs(x = "Treatment", y = "Stomatal Conductance (gs)") +
+  scale_x_discrete(labels=c('Burned', 'Unburned'))+
+  theme_estat()
+#ggsave("gsboxTrat.pdf", width = 158, height = 93, units = "mm")
+
+
+# fator 2 (especie)
+ggplot(dados) +
+  aes(
+    x = F2,
+    y = resp
+  ) +
+  geom_boxplot(fill = c("#A11D21"), width = 0.5) +
+  stat_summary(
+    fun = "mean", geom = "point", shape = 23, size = 3, fill = "white"
+  ) +
+  labs(x = "Specie", y = "Stomatal Conductance (gs)")+
+  theme_estat()
+#ggsave("gsboxEsp.pdf", width = 158, height = 93, units = "mm")
+
+# ambos os fatores (organizar em painel pra ficar mais claro)
+
+ggplot(dados) +
+  aes(
+    x = F1:F2,
+    y = resp
+  ) +
+  geom_boxplot(fill = c("#A11D21"), width = 0.5) +
+  stat_summary(
+    fun = "mean", geom = "point", shape = 23, size = 3, fill = "white"
+  ) +
+  labs(x = "Interação", y = "Stomatal Conductance (gs)") +
+  theme_estat()+
+  coord_flip()
+#ggsave("gsboxInt.pdf", width = 158, height = 93, units = "mm")
+
+
+###### MODELO ######
+mod = with(dados, aov(resp~F1*F2+bloco))
+anova(mod)
+
+###### PRESSUPOSTOS ######
+
+# normalidade
+(norm=shapiro.test(mod$res))
+
+# homogeneidade
+with(dados, leveneTest(mod$residuals~F1))
+with(dados, leveneTest(mod$residuals~F2))
+grupos <- interaction(dados$F1, dados$F2)
+with(dados, leveneTest(mod$residuals~grupos))
+
+# independência
+
+resíduos <- mod$residuals
+data<-as.data.frame(resíduos)
+ggplot(data) +
+  aes(x = 1:length(resíduos), y=resíduos) +
+  geom_point(colour = "#A11D21", size = 3) +
+  labs(x = "Observation", y = "Residuals") +
+  theme_estat()
+#ggsave("gsplot.pdf", width = 158, height = 93, units = "mm")
+
+############### A ###############
+
+F1=as.factor(tratamentos)
+F2=as.factor(especies)
+bloco=as.factor(parcelas)
+Trat=paste(F1,F2)
+dados=data.frame(F1,F2,bloco,resp=A)
+attach(dados)
+X="";Y=""
+
+dados$resp <- log(dados$resp)
+
+###### ANÁLISE EXPLORATÓRIA ######
+
+# fator 1 (tartamento)
+ggplot(dados) +
+  aes(
+    x = F1,
+    y = resp
+  ) +
+  geom_boxplot(fill = c("#A11D21"), width = 0.5) +
+  stat_summary(
+    fun = "mean", geom = "point", shape = 23, size = 3, fill = "white"
+  ) +
+  labs(x = "Treatment", y = "Net Photosynthesis (A)") +
+  scale_x_discrete(labels=c('Burned', 'Unburned'))+
+  theme_estat()
+#ggsave("AboxTrat.pdf", width = 158, height = 93, units = "mm")
+
+
+# fator 2 (especie)
+ggplot(dados) +
+  aes(
+    x = F2,
+    y = resp
+  ) +
+  geom_boxplot(fill = c("#A11D21"), width = 0.5) +
+  stat_summary(
+    fun = "mean", geom = "point", shape = 23, size = 3, fill = "white"
+  ) +
+  labs(x = "Specie", y = "Net Photosynthesis (A)")+
+  theme_estat()
+#ggsave("AboxEsp.pdf", width = 158, height = 93, units = "mm")
+
+# ambos os fatores (organizar em painel pra ficar mais claro)
+
+ggplot(dados) +
+  aes(
+    x = F1:F2,
+    y = resp
+  ) +
+  geom_boxplot(fill = c("#A11D21"), width = 0.5) +
+  stat_summary(
+    fun = "mean", geom = "point", shape = 23, size = 3, fill = "white"
+  ) +
+  labs(x = "Interação", y = "Net Photosynthesis (A)") +
+  theme_estat()+
+  coord_flip()
+#ggsave("AboxInt.pdf", width = 158, height = 93, units = "mm")
+
+
+###### MODELO ######
+mod = with(dados, aov(resp~F1*F2+bloco))
+anova(mod)
+
+###### PRESSUPOSTOS ######
+
+# normalidade
+(norm=shapiro.test(mod$res))
+
+# homogeneidade
+with(dados, leveneTest(mod$residuals~F1))
+with(dados, leveneTest(mod$residuals~F2))
+grupos <- interaction(dados$F1, dados$F2)
+with(dados, leveneTest(mod$residuals~grupos))
+
+# independência
+
+resíduos <- mod$residuals
+data<-as.data.frame(resíduos)
+ggplot(data) +
+  aes(x = 1:length(resíduos), y=resíduos) +
+  geom_point(colour = "#A11D21", size = 3) +
+  labs(x = "Observation", y = "Residuals") +
+  theme_estat()
+#ggsave("Aplot.pdf", width = 158, height = 93, units = "mm")
+
+
+############### EIUA ###############
+
+F1=as.factor(tratamentos)
+F2=as.factor(especies)
+bloco=as.factor(parcelas)
+Trat=paste(F1,F2)
+dados=data.frame(F1,F2,bloco,resp=EIUA)
+attach(dados)
+X="";Y=""
+
+dados$resp <- log(dados$resp)
+
+###### ANÁLISE EXPLORATÓRIA ######
+
+# fator 1 (tartamento)
+ggplot(dados) +
+  aes(
+    x = F1,
+    y = resp
+  ) +
+  geom_boxplot(fill = c("#A11D21"), width = 0.5) +
+  stat_summary(
+    fun = "mean", geom = "point", shape = 23, size = 3, fill = "white"
+  ) +
+  labs(x = "Treatment", y = "Instantaneous Water Use Efficiency (EIUA)") +
+  scale_x_discrete(labels=c('Burned', 'Unburned'))+
+  theme_estat()
+#ggsave("EIUAboxTrat.pdf", width = 158, height = 93, units = "mm")
+
+
+# fator 2 (especie)
+ggplot(dados) +
+  aes(
+    x = F2,
+    y = resp
+  ) +
+  geom_boxplot(fill = c("#A11D21"), width = 0.5) +
+  stat_summary(
+    fun = "mean", geom = "point", shape = 23, size = 3, fill = "white"
+  ) +
+  labs(x = "Specie", y = "Instantaneous Water Use Efficiency (EIUA)")+
+  theme_estat()
+#ggsave("EIUAboxEsp.pdf", width = 158, height = 93, units = "mm")
+
+# ambos os fatores (organizar em painel pra ficar mais claro)
+
+ggplot(dados) +
+  aes(
+    x = F1:F2,
+    y = resp
+  ) +
+  geom_boxplot(fill = c("#A11D21"), width = 0.5) +
+  stat_summary(
+    fun = "mean", geom = "point", shape = 23, size = 3, fill = "white"
+  ) +
+  labs(x = "Interação", y = "Net Photosynthesis (EIUA)") +
+  theme_estat()+
+  coord_flip()
+#ggsave("EIUAboxInt.pdf", width = 158, height = 93, units = "mm")
+
+
+###### MODELO ######
+mod = with(dados, aov(resp~F1*F2+bloco))
+anova(mod)
+
+###### PRESSUPOSTOS ######
+
+# normalidade
+(norm=shapiro.test(mod$res))
+
+# homogeneidade
+with(dados, leveneTest(mod$residuals~F1))
+with(dados, leveneTest(mod$residuals~F2))
+grupos <- interaction(dados$F1, dados$F2)
+with(dados, leveneTest(mod$residuals~grupos))
+
+# independência
+
+resíduos <- mod$residuals
+data<-as.data.frame(resíduos)
+ggplot(data) +
+  aes(x = 1:length(resíduos), y=resíduos) +
+  geom_point(colour = "#A11D21", size = 3) +
+  labs(x = "Observation", y = "Residuals") +
+  theme_estat()
+#ggsave("EIUAplot.pdf", width = 158, height = 93, units = "mm")
+
+
+###### TESTE DE TUKEY  ######
+
+(comparacao <- ea2(dados, design=2))
