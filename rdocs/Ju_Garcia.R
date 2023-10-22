@@ -64,7 +64,7 @@ EIUA <- fotossintese$EIUA
 
 unique(Species)
 
-############### K ###############
+############### E ###############
 
 F1=as.factor(Treatments)
 F2=as.factor(Species)
@@ -83,7 +83,6 @@ após a transformação logarítmica, os valores passam a ter distribuição nor
 entre média e variância, além de homogeneizar variâncias entre grupos), a escala de valores 
 não é a mesma, os dados transformados perdem seu significado biológico '
 
-dados$resp <- log(dados$resp)
 
 ###### ANÁLISE EXPLORATÓRIA ######
 
@@ -98,13 +97,12 @@ ggplot(dados) +
   stat_summary(
     fun = "mean", geom = "point", shape = 23, size = 3, fill = "white"
   ) +
-  labs(x = "Tratamento", y = "E") +
+  labs(x = "Treatments", y = "Leaf Transpiration (E)") +
   theme_estat()
-#ggsave("box_bi.pdf", width = 158, height = 93, units = "mm")
-
+ggsave("box_bi1.pdf", width = 158, height = 93, units = "mm")
+ggsave("box_bi1.tiff", width = 158, height = 93, units = "mm")
 
 # fator 2 (especie)
-
 ggplot(dados) +
   aes(
     x = F2,
@@ -114,25 +112,14 @@ ggplot(dados) +
   stat_summary(
     fun = "mean", geom = "point", shape = 23, size = 3, fill = "white"
   ) +
-  labs(x = "Treatments", y = "E") +
-  theme(axis.text.x = element_text(angle = 90, hjust = 0.5, size = 8)) +
-  scale_x_discrete(breaks = unique(dados$F2))
+  labs(x = "Treatments", y = "Leaf Transpiration (E)") +
+  theme_estat()+
+  theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.35, size = 9),  # Tamanho e rotação das labels do eixo x
+        axis.text.y = element_text(size = 9))
 
-# ambos os fatores
+ggsave("box_bi2.pdf", width = 158, height = 93, units = "mm")
+ggsave("box_bi2.tiff", width = 158, height = 93, units = "mm")
 
-par(bty='l', mai=c(1, 1, .2, .2))
-par(cex=0.7)
-caixas=with(dados, car::Boxplot(resp ~ F1*F2, vertical=T,las=1, col='Lightyellow',
-                                xlab=X, ylab=Y))
-
-###### INTERAÇÃO ######
-
-with(dados, interaction.plot(F2, F1, resp, las=1, col=1:17, bty='l', 
-                             xlab='', ylab='K', trace.label="FATOR1"))
-
-# FATOR1 e FATOR2
-with(dados, interaction.plot(F1, F2, resp, las=1, col=1:17, bty='l', 
-                             xlab='', ylab='K', trace.label="FATOR2"))
 
 ###### MODELO ######
 
@@ -143,6 +130,7 @@ anova(mod)
 
 # normalidade
 (norm=shapiro.test(mod$res))
+qqnorm(mod$res)
 
 # homogeneidade
 with(dados, leveneTest(mod$residuals~F1))
@@ -151,8 +139,380 @@ grupos <- interaction(dados$F1, dados$F2)
 with(dados, leveneTest(mod$residuals~grupos))
 
 # independência
+mod1 <- data.frame(mod$residuals)
+mod1$id <- 1:nrow(mod1)
 
-plot(mod$residuals)
+plot1 <- ggplot(mod1, aes(x = id, y = mod.residuals)) +
+  geom_point(colour = "#A11D21", size = 3) +
+  labs(
+    x = "Observation",
+    y = "Residuals"
+  ) +
+  theme_estat()
+plot1
+
+ggsave("plot1.pdf", width = 158, height = 93, units = "mm")
+ggsave("plot1.tiff", width = 158, height = 93, units = "mm")
+
+## Transformação em log
+dados$resp <- log(dados$resp)
+
+###### MODELO ######
+
+mod = with(dados, aov(resp~F1*F2))
+anova(mod)
+
+###### PRESSUPOSTOS ######
+
+# normalidade
+(norm=shapiro.test(mod$res))
+qqnorm(mod$res)
+
+# homogeneidade
+with(dados, leveneTest(mod$residuals~F1))
+with(dados, leveneTest(mod$residuals~F2))
+grupos <- interaction(dados$F1, dados$F2)
+with(dados, leveneTest(mod$residuals~grupos))
+
+# independência
+mod1 <- data.frame(mod$residuals)
+mod1$id <- 1:nrow(mod1)
+
+plot1 <- ggplot(mod1, aes(x = id, y = mod.residuals)) +
+  geom_point(colour = "#A11D21", size = 3) +
+  labs(
+    x = "Observation",
+    y = "Residuals"
+  ) +
+  theme_estat()
+plot1
+
+ggsave("plot1.pdf", width = 158, height = 93, units = "mm")
+ggsave("plot1.tiff", width = 158, height = 93, units = "mm")
+
+# Teste não paramétrico
+require(ExpDes.pt)
+
+kruskal.test(dados$F1, dados$resp)
+kruskal.test(dados$F2, dados$resp)
+
+
+############### gs
+F1=as.factor(Treatments)
+F2=as.factor(Species)
+#bloco=as.factor(bloco)
+Trat=paste(F1,F2)
+dados=data.frame(F1,F2,resp=gs)
+attach(dados)
+X="";Y=""
+
+###### ANÁLISE EXPLORATÓRIA ######
+
+# fator 1 (tratamento)
+
+ggplot(dados) +
+  aes(
+    x = F1,
+    y = resp
+  ) +
+  geom_boxplot(fill = c("#A11D21"), width = 0.5) +
+  stat_summary(
+    fun = "mean", geom = "point", shape = 23, size = 3, fill = "white"
+  ) +
+  labs(x = "Treatments", y = "Stomatal Conductance (gs)") +
+  theme_estat()
+ggsave("box_bi3.pdf", width = 158, height = 93, units = "mm")
+ggsave("box_bi3.tiff", width = 158, height = 93, units = "mm")
+
+# fator 2 (especie)
+ggplot(dados) +
+  aes(
+    x = F2,
+    y = resp
+  ) +
+  geom_boxplot(fill = c("#A11D21"), width = 0.5) +
+  stat_summary(
+    fun = "mean", geom = "point", shape = 23, size = 3, fill = "white"
+  ) +
+  labs(x = "Treatments", y = "Stomatal Conductance (gs)") +
+  theme_estat()+
+  theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.35, size = 9),  # Tamanho e rotação das labels do eixo x
+        axis.text.y = element_text(size = 9))
+
+ggsave("box_bi4.pdf", width = 158, height = 93, units = "mm")
+ggsave("box_bi4.tiff", width = 158, height = 93, units = "mm")
+
+
+###### MODELO ######
+
+mod = with(dados, aov(resp~F1*F2))
+anova(mod)
+
+###### PRESSUPOSTOS ######
+
+# normalidade
+(norm=shapiro.test(mod$res))
+qqnorm(mod$res)
+
+# homogeneidade
+with(dados, leveneTest(mod$residuals~F1))
+with(dados, leveneTest(mod$residuals~F2))
+grupos <- interaction(dados$F1, dados$F2)
+with(dados, leveneTest(mod$residuals~grupos))
+
+# independência
+mod1 <- data.frame(mod$residuals)
+mod1$id <- 1:nrow(mod1)
+
+plot1 <- ggplot(mod1, aes(x = id, y = mod.residuals)) +
+  geom_point(colour = "#A11D21", size = 3) +
+  labs(
+    x = "Observation",
+    y = "Residuals"
+  ) +
+  theme_estat()
+plot1
+
+ggsave("plot2.pdf", width = 158, height = 93, units = "mm")
+ggsave("plot2.tiff", width = 158, height = 93, units = "mm")
+
+## Transformação em log
+dados$resp <- log(dados$resp)
+###### MODELO ######
+
+mod = with(dados, aov(resp~F1*F2))
+anova(mod)
+
+###### PRESSUPOSTOS ######
+
+# normalidade
+(norm=shapiro.test(mod$res))
+qqnorm(mod$res)
+
+# homogeneidade
+with(dados, leveneTest(mod$residuals~F1))
+with(dados, leveneTest(mod$residuals~F2))
+grupos <- interaction(dados$F1, dados$F2)
+with(dados, leveneTest(mod$residuals~grupos))
+
+# Teste não paramétrico
+require(ExpDes.pt)
+
+kruskal.test(dados$F1, dados$resp)
+kruskal.test(dados$F2, dados$resp)
+
+
+############ A
+
+F1=as.factor(Treatments)
+F2=as.factor(Species)
+#bloco=as.factor(bloco)
+Trat=paste(F1,F2)
+dados=data.frame(F1,F2,resp=A)
+attach(dados)
+X="";Y=""
+
+###### ANÁLISE EXPLORATÓRIA ######
+
+# fator 1 (tratamento)
+
+ggplot(dados) +
+  aes(
+    x = F1,
+    y = resp
+  ) +
+  geom_boxplot(fill = c("#A11D21"), width = 0.5) +
+  stat_summary(
+    fun = "mean", geom = "point", shape = 23, size = 3, fill = "white"
+  ) +
+  labs(x = "Treatments", y = "Net Photosynthesis(A)") +
+  theme_estat()
+ggsave("box_bi5.pdf", width = 158, height = 93, units = "mm")
+ggsave("box_bi5.tiff", width = 158, height = 93, units = "mm")
+
+# fator 2 (especie)
+ggplot(dados) +
+  aes(
+    x = F2,
+    y = resp
+  ) +
+  geom_boxplot(fill = c("#A11D21"), width = 0.5) +
+  stat_summary(
+    fun = "mean", geom = "point", shape = 23, size = 3, fill = "white"
+  ) +
+  labs(x = "Treatments", y = "Net Photosynthesis(A)") +
+  theme_estat()+
+  theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.35, size = 9),  # Tamanho e rotação das labels do eixo x
+        axis.text.y = element_text(size = 9))
+
+ggsave("box_bi6.pdf", width = 158, height = 93, units = "mm")
+ggsave("box_bi6.tiff", width = 158, height = 93, units = "mm")
+
+
+###### MODELO ######
+
+mod = with(dados, aov(resp~F1*F2))
+anova(mod)
+
+###### PRESSUPOSTOS ######
+
+# normalidade
+(norm=shapiro.test(mod$res))
+qqnorm(mod$res)
+
+# homogeneidade
+with(dados, leveneTest(mod$residuals~F1))
+with(dados, leveneTest(mod$residuals~F2))
+grupos <- interaction(dados$F1, dados$F2)
+with(dados, leveneTest(mod$residuals~grupos))
+
+# independência
+mod1 <- data.frame(mod$residuals)
+mod1$id <- 1:nrow(mod1)
+
+plot1 <- ggplot(mod1, aes(x = id, y = mod.residuals)) +
+  geom_point(colour = "#A11D21", size = 3) +
+  labs(
+    x = "Observation",
+    y = "Residuals"
+  ) +
+  theme_estat()
+plot1
+
+ggsave("plot3.pdf", width = 158, height = 93, units = "mm")
+ggsave("plot3.tiff", width = 158, height = 93, units = "mm")
+
+
+## Transformação em log
+dados$resp <- log(dados$resp)
+###### MODELO ######
+
+mod = with(dados, aov(resp~F1*F2))
+anova(mod)
+
+###### PRESSUPOSTOS ######
+
+# normalidade
+(norm=shapiro.test(mod$res))
+qqnorm(mod$res)
+
+# homogeneidade
+with(dados, leveneTest(mod$residuals~F1))
+with(dados, leveneTest(mod$residuals~F2))
+grupos <- interaction(dados$F1, dados$F2)
+with(dados, leveneTest(mod$residuals~grupos))
+
+# Teste não paramétrico
+require(ExpDes.pt)
+
+kruskal.test(dados$F1, dados$resp)
+kruskal.test(dados$F2, dados$resp)
+
+
+############### EIUA
+F1=as.factor(Treatments)
+F2=as.factor(Species)
+#bloco=as.factor(bloco)
+Trat=paste(F1,F2)
+dados=data.frame(F1,F2,resp=EIUA)
+attach(dados)
+X="";Y=""
+
+###### ANÁLISE EXPLORATÓRIA ######
+
+# fator 1 (tratamento)
+
+ggplot(dados) +
+  aes(
+    x = F1,
+    y = resp
+  ) +
+  geom_boxplot(fill = c("#A11D21"), width = 0.5) +
+  stat_summary(
+    fun = "mean", geom = "point", shape = 23, size = 3, fill = "white"
+  ) +
+  labs(x = "Treatments", y = "Instant water use efficiency(EIUA)") +
+  theme_estat()
+ggsave("box_bi7.pdf", width = 158, height = 93, units = "mm")
+ggsave("box_bi7.tiff", width = 158, height = 93, units = "mm")
+
+# fator 2 (especie)
+ggplot(dados) +
+  aes(
+    x = F2,
+    y = resp
+  ) +
+  geom_boxplot(fill = c("#A11D21"), width = 0.5) +
+  stat_summary(
+    fun = "mean", geom = "point", shape = 23, size = 3, fill = "white"
+  ) +
+  labs(x = "Treatments", y = "Instant water use efficiency(EIUA)") +
+  theme_estat()+
+  theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.35, size = 9),  # Tamanho e rotação das labels do eixo x
+        axis.text.y = element_text(size = 9))
+
+ggsave("box_bi8.pdf", width = 158, height = 93, units = "mm")
+ggsave("box_bi8.tiff", width = 158, height = 93, units = "mm")
+
+
+###### MODELO ######
+
+mod = with(dados, aov(resp~F1*F2))
+anova(mod)
+
+###### PRESSUPOSTOS ######
+
+# normalidade
+(norm=shapiro.test(mod$res))
+qqnorm(mod$res)
+
+# homogeneidade
+with(dados, leveneTest(mod$residuals~F1))
+with(dados, leveneTest(mod$residuals~F2))
+grupos <- interaction(dados$F1, dados$F2)
+with(dados, leveneTest(mod$residuals~grupos))
+
+# independência
+mod1 <- data.frame(mod$residuals)
+mod1$id <- 1:nrow(mod1)
+
+plot1 <- ggplot(mod1, aes(x = id, y = mod.residuals)) +
+  geom_point(colour = "#A11D21", size = 3) +
+  labs(
+    x = "Observation",
+    y = "Residuals"
+  ) +
+  theme_estat()
+plot1
+
+ggsave("plot4.pdf", width = 158, height = 93, units = "mm")
+ggsave("plot4.tiff", width = 158, height = 93, units = "mm")
+
+## Transformação em log
+dados$resp <- log(dados$resp)
+###### MODELO ######
+
+mod = with(dados, aov(resp~F1*F2))
+anova(mod)
+
+###### PRESSUPOSTOS ######
+
+# normalidade
+(norm=shapiro.test(mod$res))
+qqnorm(mod$res)
+
+# homogeneidade
+with(dados, leveneTest(mod$residuals~F1))
+with(dados, leveneTest(mod$residuals~F2))
+grupos <- interaction(dados$F1, dados$F2)
+with(dados, leveneTest(mod$residuals~grupos))
+
+# Teste não paramétrico
+require(ExpDes.pt)
+
+kruskal.test(dados$F1, dados$resp)
+kruskal.test(dados$F2, dados$resp)
+
 
 ###### TESTE DE TUKEY  ######
 
