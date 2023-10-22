@@ -115,21 +115,9 @@ ggplot(dados) +
     fun = "mean", geom = "point", shape = 23, size = 3, fill = "white"
   ) +
   labs(x = "Treatments", y = "E") +
-  theme(axis.text.x = element_text(angle = 90, hjust = 1, size = 9),  # Define o tamanho da fonte para o eixo x
-        axis.text.y = element_text(size = 8)) 
+  theme(axis.text.x = element_text(angle = 90, hjust = 0.5, size = 8)) +
+  scale_x_discrete(breaks = unique(dados$F2))
 
-ggplot(dados) +
-  aes(
-    x = F2,
-    y = resp
-  ) +
-  geom_boxplot(fill = c("#A11D21"), width = 0.5) +
-  stat_summary(
-    fun = "mean", geom = "point", shape = 23, size = 3, fill = "white"
-  ) +
-  labs(x = "Tratamento", y = "E") +
-  theme(axis.text.x = element_markdown(angle = 0, hjust = 0.5, size = 8)) +
-  scale_x_discrete(labels = paste0("Tratamento ", unique(dados$F2)))
 # ambos os fatores
 par(bty='l', mai=c(1, 1, .2, .2))
 par(cex=0.7)
