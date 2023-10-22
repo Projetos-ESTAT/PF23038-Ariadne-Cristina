@@ -119,6 +119,7 @@ ggplot(dados) +
   scale_x_discrete(breaks = unique(dados$F2))
 
 # ambos os fatores
+
 par(bty='l', mai=c(1, 1, .2, .2))
 par(cex=0.7)
 caixas=with(dados, car::Boxplot(resp ~ F1*F2, vertical=T,las=1, col='Lightyellow',
