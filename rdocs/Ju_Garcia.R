@@ -55,19 +55,19 @@ eij é o componente de erro aleatório '
 ############################## NUTRIENTES CERRADO: ##############################
 
 fotossintese<-read_excel("banco/Fotossintese - cerrado e campo 1.xlsx", sheet = 3)
-especies<- fotossintese$Species
-tratamentos<- fotossintese$Treatments
+Species<- fotossintese$Species
+Treatments<- fotossintese$Treatments
 E <- fotossintese$E
 gs <- fotossintese$gs
 A <- fotossintese$A
 EIUA <- fotossintese$EIUA
 
-unique(especies)
+unique(Species)
 
 ############### K ###############
 
-F1=as.factor(tratamentos)
-F2=as.factor(especies)
+F1=as.factor(Treatments)
+F2=as.factor(Species)
 #bloco=as.factor(bloco)
 Trat=paste(F1,F2)
 dados=data.frame(F1,F2,resp=E)
@@ -103,21 +103,33 @@ ggplot(dados) +
 #ggsave("box_bi.pdf", width = 158, height = 93, units = "mm")
 
 
-par(bty='l', mai=c(1, 1, .2, .2))
-par(cex=0.7)
-caixas=with(dados, car::Boxplot(resp ~ F1, vertical=T,las=1, col='Lightyellow',
-                                xlab=X, ylab=Y))
-mediab=with(dados,tapply(resp, F1, mean))
-points(mediab, pch='+', cex=1.5, col='red')
-
 # fator 2 (especie)
-par(bty='l', mai=c(1, 1, .2, .2))
-par(cex=0.7)
-caixas=with(dados, car::Boxplot(resp ~ F2, vertical=T,las=1, col='Lightyellow',
-                                xlab=X, ylab=Y))
-mediab=with(dados,tapply(resp, F2, mean))
-points(mediab, pch='+', cex=1.5, col='red')
 
+ggplot(dados) +
+  aes(
+    x = F2,
+    y = resp
+  ) +
+  geom_boxplot(fill = c("#A11D21"), width = 0.5) +
+  stat_summary(
+    fun = "mean", geom = "point", shape = 23, size = 3, fill = "white"
+  ) +
+  labs(x = "Treatments", y = "E") +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1, size = 9),  # Define o tamanho da fonte para o eixo x
+        axis.text.y = element_text(size = 8)) 
+
+ggplot(dados) +
+  aes(
+    x = F2,
+    y = resp
+  ) +
+  geom_boxplot(fill = c("#A11D21"), width = 0.5) +
+  stat_summary(
+    fun = "mean", geom = "point", shape = 23, size = 3, fill = "white"
+  ) +
+  labs(x = "Tratamento", y = "E") +
+  theme(axis.text.x = element_markdown(angle = 0, hjust = 0.5, size = 8)) +
+  scale_x_discrete(labels = paste0("Tratamento ", unique(dados$F2)))
 # ambos os fatores
 par(bty='l', mai=c(1, 1, .2, .2))
 par(cex=0.7)
