@@ -274,6 +274,7 @@ Trat=paste(F1,F2)
 dados=data.frame(F1,F2,bloco,resp=Mg)
 attach(dados)
 X="";Y=""
+dados$bloco[20] <- 3
 
 summary(dados$resp)
 
@@ -357,10 +358,12 @@ ggplot(data) +
 ' Friedman é a alternativa não paramétrica para a ANOVA com blocos casualizados '
 
 ' O teste de Friedman não aceita repetições dentro do bloco. Por isso, será necessário agregar as repetições através de média. '
+
 dados = aggregate(dados$resp, 
                      by = list(desb = dados$F1,
                                bloco = dados$bloco), 
                      FUN = mean)
+
 friedman.test(resp ~ desb | bloco, data = dados)
 
 ############### N ###############
@@ -374,6 +377,7 @@ Trat=paste(F1,F2)
 dados=data.frame(F1,F2,bloco,resp=N)
 attach(dados)
 X="";Y=""
+dados$bloco[20] <- 3
 
 # dados$resp <- log(dados$resp + 2)
 
@@ -468,8 +472,9 @@ Trat=paste(F1,F2)
 dados=data.frame(F1,F2,bloco,resp=P)
 attach(dados)
 X="";Y=""
+dados$bloco[20] <- 3
 
-dados$resp <- log(dados$resp)
+#dados$resp <- log(dados$resp)
 
 ###### ANÁLISE EXPLORATÓRIA ######
 
@@ -602,6 +607,7 @@ Trat=paste(F1,F2)
 dados=data.frame(F1,F2,bloco,resp=E)
 attach(dados)
 X="";Y=""
+dados$bloco[20] <- 3
 
 dados$resp <- log(dados$resp)
 
@@ -681,9 +687,6 @@ ggplot(data) +
 #ggsave("Eplot.pdf", width = 158, height = 93, units = "mm")
 
 
-###### TESTE DE TUKEY  ######
-
-(comparacao <- ea2(dados, design=2))
 
 ############### gs ###############
 
@@ -694,6 +697,7 @@ Trat=paste(F1,F2)
 dados=data.frame(F1,F2,bloco,resp=gs)
 attach(dados)
 X="";Y=""
+dados$bloco[20] <- 3
 
 dados$resp <- log(dados$resp)
 
@@ -781,6 +785,7 @@ Trat=paste(F1,F2)
 dados=data.frame(F1,F2,bloco,resp=A)
 attach(dados)
 X="";Y=""
+dados$bloco[20] <- 3
 
 dados$resp <- log(dados$resp)
 
@@ -869,6 +874,7 @@ Trat=paste(F1,F2)
 dados=data.frame(F1,F2,bloco,resp=EIUA)
 attach(dados)
 X="";Y=""
+dados$bloco[20] <- 3
 
 dados$resp <- log(dados$resp)
 
@@ -915,7 +921,7 @@ ggplot(dados) +
   stat_summary(
     fun = "mean", geom = "point", shape = 23, size = 3, fill = "white"
   ) +
-  labs(x = "Interação", y = "Net Photosynthesis (EIUA)") +
+  labs(x = "Interação", y = "Instantaneous Water Use Efficiency (EIUA)") +
   theme_estat()+
   coord_flip()
 #ggsave("EIUAboxInt.pdf", width = 158, height = 93, units = "mm")
@@ -948,6 +954,4 @@ ggplot(data) +
 #ggsave("EIUAplot.pdf", width = 158, height = 93, units = "mm")
 
 
-###### TESTE DE TUKEY  ######
 
-(comparacao <- ea2(dados, design=2))
