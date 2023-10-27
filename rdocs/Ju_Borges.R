@@ -370,7 +370,7 @@ dados$resp <- log(dados$resp)
 
 ###### ANÁLISE EXPLORATÓRIA ######
 
-# fator 1 (tartamento)
+# fator 1 (tratamento)
 ggplot(dados) +
   aes(
     x = F1,
@@ -1008,6 +1008,7 @@ dados=data.frame(F1,F2,bloco,resp=gs)
 attach(dados)
 X="";Y=""
 dados$bloco[20] <- 3
+min(gs)
 
 dados$resp <- log(dados$resp)
 
@@ -1082,7 +1083,8 @@ ggplot(data) +
     y = "Stomatal Conductance (gs)"
   ) +
   theme_estat()
-#ggsave("qqplotgs.pdf", width = 158, height = 93, units = "mm")
+#ggsave("qqplotgs1.pdf", width = 158, height = 93, units = "mm")
+hist(resíduos)
 
 # homogeneidade
 
@@ -1096,7 +1098,7 @@ ggplot(data) +
   geom_point(colour = "#A11D21", size = 3) +
   labs(x = "Fitted Values", y = "Residuals") +
   theme_estat()
-#ggsave("gsplotFV.pdf", width = 158, height = 93, units = "mm")
+#ggsave("gsplotFV1.pdf", width = 158, height = 93, units = "mm")
 
 
 # independência
@@ -1106,7 +1108,45 @@ ggplot(data) +
   geom_point(colour = "#A11D21", size = 3) +
   labs(x = "Observation", y = "Residuals") +
   theme_estat()
-#ggsave("gsplot.pdf", width = 158, height = 93, units = "mm")
+#ggsave("gsplot1.pdf", width = 158, height = 93, units = "mm")
+
+
+### ANALISAR OUTLIERS ###
+
+plot(mod)
+
+ggplot(data) +
+  aes(x = 1:length(Res), y = Res) +
+  geom_point(colour = "#A11D21", size = 3) +
+  labs(
+    x = "Observação",
+    y = "Resíduos Studentizados"
+  ) +
+  theme_estat()
+
+' Regra básica: Se Di ≥ 0, 80, a i-´esima observacao sera considerada
+influente.'
+cooks.distance(mod)
+indice<-c(1:181)
+plot(indice,cooks.distance(mod), type = "l")
+plot(mod,which=4)
+
+
+###### TESTE DE TUKEY  ######
+
+' ajustar o nível de significância (alfa) para corrigir o problema das múltiplas comparações '
+
+(comparacao <- ea2(dados, design=2)) # fatorial duplo em blocos casualizados
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -1185,22 +1225,73 @@ anova(mod)
 # normalidade
 (norm=shapiro.test(mod$res))
 
+resíduos <- mod$residuals
+fit<- mod$fitted.values
+Res <- rstudent(mod)
+data<-data.frame(resíduos,fit,Res)
+ggplot(data) + 
+  aes(sample = resíduos) +
+  stat_qq(colour = "#A11D21") +
+  stat_qq_line(size = 0.8) + 
+  labs(
+    x = "Normal Quantiles",
+    y = "Net Photosynthesis (A)"
+  ) +
+  theme_estat()
+#ggsave("qqplotA.pdf", width = 158, height = 93, units = "mm")
+
 # homogeneidade
+
 with(dados, leveneTest(mod$residuals~F1))
 with(dados, leveneTest(mod$residuals~F2))
 grupos <- interaction(dados$F1, dados$F2)
 with(dados, leveneTest(mod$residuals~grupos))
 
+ggplot(data) +
+  aes(x = fit, y=resíduos) +
+  geom_point(colour = "#A11D21", size = 3) +
+  labs(x = "Fitted Values", y = "Residuals") +
+  theme_estat()
+#ggsave("AplotFV.pdf", width = 158, height = 93, units = "mm")
+
+
 # independência
 
-resíduos <- mod$residuals
-data<-as.data.frame(resíduos)
 ggplot(data) +
   aes(x = 1:length(resíduos), y=resíduos) +
   geom_point(colour = "#A11D21", size = 3) +
   labs(x = "Observation", y = "Residuals") +
   theme_estat()
 #ggsave("Aplot.pdf", width = 158, height = 93, units = "mm")
+
+
+### ANALISAR OUTLIERS ###
+
+plot(mod)
+
+ggplot(data) +
+  aes(x = 1:length(Res), y = Res) +
+  geom_point(colour = "#A11D21", size = 3) +
+  labs(
+    x = "Observação",
+    y = "Resíduos Studentizados"
+  ) +
+  theme_estat()
+
+' Regra básica: Se Di ≥ 0, 80, a i-´esima observacao sera considerada
+influente.'
+cooks.distance(mod)
+indice<-c(1:181)
+plot(indice,cooks.distance(mod), type = "l")
+plot(mod,which=4)
+
+
+###### TESTE DE TUKEY  ######
+
+' ajustar o nível de significância (alfa) para corrigir o problema das múltiplas comparações '
+
+(comparacao <- ea2(dados, design=2)) # fatorial duplo em blocos casualizados
+
 
 
 ############### EIUA ###############
@@ -1274,22 +1365,70 @@ anova(mod)
 # normalidade
 (norm=shapiro.test(mod$res))
 
+
+resíduos <- mod$residuals
+fit<- mod$fitted.values
+Res <- rstudent(mod)
+data<-data.frame(resíduos,fit,Res)
+ggplot(data) + 
+  aes(sample = resíduos) +
+  stat_qq(colour = "#A11D21") +
+  stat_qq_line(size = 0.8) + 
+  labs(
+    x = "Normal Quantiles",
+    y = "Instantaneous Water Use Efficiency (EIUA)"
+  ) +
+  theme_estat()
+#ggsave("qqplotEIUA1.pdf", width = 158, height = 93, units = "mm")
+
 # homogeneidade
+
 with(dados, leveneTest(mod$residuals~F1))
 with(dados, leveneTest(mod$residuals~F2))
 grupos <- interaction(dados$F1, dados$F2)
 with(dados, leveneTest(mod$residuals~grupos))
 
+ggplot(data) +
+  aes(x = fit, y=resíduos) +
+  geom_point(colour = "#A11D21", size = 3) +
+  labs(x = "Fitted Values", y = "Residuals") +
+  theme_estat()
+#ggsave("EIUAplotFV1.pdf", width = 158, height = 93, units = "mm")
+
+
 # independência
 
-resíduos <- mod$residuals
-data<-as.data.frame(resíduos)
 ggplot(data) +
   aes(x = 1:length(resíduos), y=resíduos) +
   geom_point(colour = "#A11D21", size = 3) +
   labs(x = "Observation", y = "Residuals") +
   theme_estat()
-#ggsave("EIUAplot.pdf", width = 158, height = 93, units = "mm")
+#ggsave("EIUAplot1.pdf", width = 158, height = 93, units = "mm")
 
 
+### ANALISAR OUTLIERS ###
 
+plot(mod)
+
+ggplot(data) +
+  aes(x = 1:length(Res), y = Res) +
+  geom_point(colour = "#A11D21", size = 3) +
+  labs(
+    x = "Observação",
+    y = "Resíduos Studentizados"
+  ) +
+  theme_estat()
+
+' Regra básica: Se Di ≥ 0, 80, a i-´esima observacao sera considerada
+influente.'
+cooks.distance(mod)
+indice<-c(1:181)
+plot(indice,cooks.distance(mod), type = "l")
+plot(mod,which=4)
+
+
+###### TESTE DE TUKEY  ######
+
+' ajustar o nível de significância (alfa) para corrigir o problema das múltiplas comparações '
+
+(comparacao <- ea2(dados, design=2)) # fatorial duplo em blocos casualizados
