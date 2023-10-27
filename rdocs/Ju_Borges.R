@@ -792,24 +792,24 @@ dados$F1<-factor(dados$F1)
 dados$bloco<-factor(dados$bloco)
 table(dados$F1,dados$bloco)
 
+Pbanco<- read_excel('P.xlsx', col_names = FALSE)
+Pbanco<- rename(Pbanco, x='...3', desb='...1', bloco='...2')
+
 teste = aggregate(dados$resp, 
                      by = list(desb = dados$F1,
                                bloco = dados$bloco), 
                      FUN = mean)
+teste = aggregate(dados$resp, 
+                  by = list(desb = dados$F2,
+                            bloco = dados$bloco), 
+                  FUN = mean)
 
-friedman.test(x ~ desb | bloco, data = teste)
-
-
-
-
-
-
+friedman.test(x ~ desb | bloco ,data=Pbanco)
 
 
-
-
-
-
+Pbanco1<- read_excel('P1.xlsx', col_names = FALSE)
+Pbanco1<- rename(Pbanco1, x='...3', desb='...1', bloco='...2')
+friedman.test(x ~ desb | bloco ,data=Pbanco1)
 
 
 
