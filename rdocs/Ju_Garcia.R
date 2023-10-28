@@ -31,6 +31,7 @@ library(gridExtra)
 library(grid)
 library(ExpDes.pt)
 library(easyanova)
+library(asbio)
 
 ' o experimento foi conduzido em delineamento em blocos casualizados com 15 repetições '
 
@@ -52,7 +53,7 @@ bj é o efeito do j-ésimo nível do fator B;
 (talb)ij é o efeito da interação entre tali e bj;
 eij é o componente de erro aleatório '
 
-############################## NUTRIENTES CERRADO: ##############################
+############################## FOTOSSINTESE ##############################
 
 fotossintese<-read_excel("banco/Fotossintese - cerrado e campo 1.xlsx", sheet = 3)
 Species<- fotossintese$Species
@@ -193,11 +194,19 @@ ggsave("plot1.tiff", width = 158, height = 93, units = "mm")
 # Teste não paramétrico
 require(ExpDes.pt)
 
+F1=as.factor(Treatments)
+F2=as.factor(Species)
+#bloco=as.factor(bloco)
+Trat=paste(F1,F2)
+dados=data.frame(F1,F2,resp=E)
+attach(dados)
+X="";Y=""
+
 kruskal.test(dados$F1, dados$resp)
 kruskal.test(dados$F2, dados$resp)
 
 
-############### gs
+############### gs ############### 
 F1=as.factor(Treatments)
 F2=as.factor(Species)
 #bloco=as.factor(bloco)
@@ -298,11 +307,29 @@ with(dados, leveneTest(mod$residuals~grupos))
 # Teste não paramétrico
 require(ExpDes.pt)
 
+F1=as.factor(Treatments)
+F2=as.factor(Species)
+#bloco=as.factor(bloco)
+Trat=paste(F1,F2)
+dados=data.frame(F1,F2,resp=gs)
+attach(dados)
+X="";Y=""
+
 kruskal.test(dados$F1, dados$resp)
 kruskal.test(dados$F2, dados$resp)
 
+# Teste de Tukey
+tukey <- TukeyHSD(mod)
+TukeyHSD(mod, "F1")
+TukeyHSD(mod, "F2")
+TukeyHSD(mod, "F1:F2")
 
-############ A
+tukey <- tukey$`F1:F2`
+tukey <- as.data.frame(tukey)
+tukey %>% 
+  filter(`p adj` < 0.05)
+
+############ A ############
 
 F1=as.factor(Treatments)
 F2=as.factor(Species)
@@ -405,11 +432,19 @@ with(dados, leveneTest(mod$residuals~grupos))
 # Teste não paramétrico
 require(ExpDes.pt)
 
+F1=as.factor(Treatments)
+F2=as.factor(Species)
+#bloco=as.factor(bloco)
+Trat=paste(F1,F2)
+dados=data.frame(F1,F2,resp=A)
+attach(dados)
+X="";Y=""
+
 kruskal.test(dados$F1, dados$resp)
 kruskal.test(dados$F2, dados$resp)
 
 
-############### EIUA
+############### EIUA ###############
 F1=as.factor(Treatments)
 F2=as.factor(Species)
 #bloco=as.factor(bloco)
@@ -510,10 +545,18 @@ with(dados, leveneTest(mod$residuals~grupos))
 # Teste não paramétrico
 require(ExpDes.pt)
 
+F1=as.factor(Treatments)
+F2=as.factor(Species)
+#bloco=as.factor(bloco)
+Trat=paste(F1,F2)
+dados=data.frame(F1,F2,resp=EIUA)
+attach(dados)
+X="";Y=""
+
 kruskal.test(dados$F1, dados$resp)
 kruskal.test(dados$F2, dados$resp)
 
-###### Banco nutrientes
+############### NUTRIENTES ###############
 
 nutrientes <- read_excel("banco/Nutrientes - atualizada.xlsx", sheet = 5)
 Species<- nutrientes$Espécie
@@ -535,226 +578,6 @@ Trat=paste(F1,F2)
 dados=data.frame(F1,F2,resp=N)
 attach(dados)
 X="";Y=""
-
-# Mudança no dado
-dados <- dados %>%
-  mutate(resp = ifelse(resp == 9463.048, 1.352,resp))
-
-# fator 1 (tratamento)
-summary(dados$resp)
-ggplot(dados) +
-  aes(
-    x = F1,
-    y = resp
-  ) +
-  geom_boxplot(fill = c("#A11D21"), width = 0.5) +
-  stat_summary(
-    fun = "mean", geom = "point", shape = 23, size = 3, fill = "white"
-  ) +
-  labs(x = "Treatments", y = "N (G.KG-1)") +
-  theme_estat()
-ggsave("box_bi5.pdf", width = 158, height = 93, units = "mm")
-ggsave("box_bi5.tiff", width = 158, height = 93, units = "mm")
-
-# fator 2 (especie)
-ggplot(dados) +
-  aes(
-    x = F2,
-    y = resp
-  ) +
-  geom_boxplot(fill = c("#A11D21"), width = 0.5) +
-  stat_summary(
-    fun = "mean", geom = "point", shape = 23, size = 3, fill = "white"
-  ) +
-  labs(x = "Treatments", y = "N (G.KG-1)") +
-  theme_estat()+
-  theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.35, size = 9),  # Tamanho e rotação das labels do eixo x
-        axis.text.y = element_text(size = 9))
-
-ggsave("box_bi6.pdf", width = 158, height = 93, units = "mm")
-ggsave("box_bi6.tiff", width = 158, height = 93, units = "mm")
-
-
-###### MODELO ######
-
-mod = with(dados, aov(resp ~F1))
-anova(mod)
-
-mod1 = with(dados, aov(resp ~F2))
-anova(mod1)
-###### PRESSUPOSTOS ######
-
-# normalidade
-(norm=shapiro.test(mod$res))
-qqnorm(mod$res)
-
-# homogeneidade
-with(dados, leveneTest(mod$residuals~F1))
-with(dados, leveneTest(mod$residuals~F2))
-grupos <- interaction(dados$F1, dados$F2)
-with(dados, leveneTest(mod$residuals~grupos))
-
-# independência
-mod1 <- data.frame(mod$residuals)
-mod1$id <- 1:nrow(mod1)
-
-plot1 <- ggplot(mod1, aes(x = id, y = mod.residuals)) +
-  geom_point(colour = "#A11D21", size = 3) +
-  labs(
-    x = "Observation",
-    y = "Residuals"
-  ) +
-  theme_estat()
-plot1
-
-ggsave("plot3.pdf", width = 158, height = 93, units = "mm")
-ggsave("plot3.tiff", width = 158, height = 93, units = "mm")
-
-
-## Transformação em log
-dados$resp <- log(dados$resp)
-###### MODELO ######
-
-mod = with(dados, aov(resp~F1*F2))
-anova(mod)
-
-###### PRESSUPOSTOS ######
-
-# normalidade
-(norm=shapiro.test(mod$res))
-qqnorm(mod$res)
-
-# homogeneidade
-with(dados, leveneTest(mod$residuals~F1))
-with(dados, leveneTest(mod$residuals~F2))
-grupos <- interaction(dados$F1, dados$F2)
-with(dados, leveneTest(mod$residuals~grupos))
-
-# Teste não paramétrico
-require(ExpDes.pt)
-
-kruskal.test(dados$F1, dados$resp)
-kruskal.test(dados$F2, dados$resp)
-
-
-############### EIUA
-F1=as.factor(Treatments)
-F2=as.factor(Species)
-#bloco=as.factor(bloco)
-Trat=paste(F1,F2)
-dados=data.frame(F1,F2,resp=EIUA)
-attach(dados)
-X="";Y=""
-
-###### ANÁLISE EXPLORATÓRIA ######
-
-# fator 1 (tratamento)
-
-ggplot(dados) +
-  aes(
-    x = F1,
-    y = resp
-  ) +
-  geom_boxplot(fill = c("#A11D21"), width = 0.5) +
-  stat_summary(
-    fun = "mean", geom = "point", shape = 23, size = 3, fill = "white"
-  ) +
-  labs(x = "Treatments", y = "Instant water use efficiency(EIUA)") +
-  theme_estat()
-ggsave("box_bi7.pdf", width = 158, height = 93, units = "mm")
-ggsave("box_bi7.tiff", width = 158, height = 93, units = "mm")
-
-# fator 2 (especie)
-ggplot(dados) +
-  aes(
-    x = F2,
-    y = resp
-  ) +
-  geom_boxplot(fill = c("#A11D21"), width = 0.5) +
-  stat_summary(
-    fun = "mean", geom = "point", shape = 23, size = 3, fill = "white"
-  ) +
-  labs(x = "Treatments", y = "Instant water use efficiency(EIUA)") +
-  theme_estat()+
-  theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.35, size = 9),  # Tamanho e rotação das labels do eixo x
-        axis.text.y = element_text(size = 9))
-
-ggsave("box_bi8.pdf", width = 158, height = 93, units = "mm")
-ggsave("box_bi8.tiff", width = 158, height = 93, units = "mm")
-
-
-###### MODELO ######
-
-mod = with(dados, aov(resp~F1*F2))
-anova(mod)
-
-###### PRESSUPOSTOS ######
-
-# normalidade
-(norm=shapiro.test(mod$res))
-qqnorm(mod$res)
-
-# homogeneidade
-with(dados, leveneTest(mod$residuals~F1))
-with(dados, leveneTest(mod$residuals~F2))
-grupos <- interaction(dados$F1, dados$F2)
-with(dados, leveneTest(mod$residuals~grupos))
-
-# independência
-mod1 <- data.frame(mod$residuals)
-mod1$id <- 1:nrow(mod1)
-
-plot1 <- ggplot(mod1, aes(x = id, y = mod.residuals)) +
-  geom_point(colour = "#A11D21", size = 3) +
-  labs(
-    x = "Observation",
-    y = "Residuals"
-  ) +
-  theme_estat()
-plot1
-
-ggsave("plot4.pdf", width = 158, height = 93, units = "mm")
-ggsave("plot4.tiff", width = 158, height = 93, units = "mm")
-
-## Transformação em log
-dados$resp <- log(dados$resp)
-###### MODELO ######
-
-mod = with(dados, aov(resp~F1*F2))
-anova(mod)
-
-###### PRESSUPOSTOS ######
-
-# normalidade
-(norm=shapiro.test(mod$res))
-qqnorm(mod$res)
-
-# homogeneidade
-with(dados, leveneTest(mod$residuals~F1))
-with(dados, leveneTest(mod$residuals~F2))
-grupos <- interaction(dados$F1, dados$F2)
-with(dados, leveneTest(mod$residuals~grupos))
-
-# Teste não paramétrico
-require(ExpDes.pt)
-
-kruskal.test(dados$F1, dados$resp)
-kruskal.test(dados$F2, dados$resp)
-
-
-############### N ###############
-
-F1=as.factor(Treatments)
-F2=as.factor(Species)
-#bloco=as.factor(bloco)
-Trat=paste(F1,F2)
-dados=data.frame(F1,F2,resp=N)
-attach(dados)
-X="";Y=""
-
-# Mudança no dado
-dados <- dados %>%
-  mutate(resp = ifelse(resp == 9463.048, 1.352,resp))
 
 # fator 1 (tratamento)
 summary(dados$resp)
@@ -807,8 +630,6 @@ qqnorm(mod$res)
 # homogeneidade
 with(dados, leveneTest(mod$residuals~F1))
 with(dados, leveneTest(mod$residuals~F2))
-grupos <- interaction(dados$F1, dados$F2)
-with(dados, leveneTest(mod$residuals~grupos))
 
 # independência
 mod1 <- data.frame(mod$residuals)
@@ -845,17 +666,24 @@ qqnorm(mod$res)
 # homogeneidade
 with(dados, leveneTest(mod$residuals~F1))
 with(dados, leveneTest(mod$residuals~F2))
-grupos <- interaction(dados$F1, dados$F2)
-with(dados, leveneTest(mod$residuals~grupos))
+
 
 # Teste não paramétrico
 require(ExpDes.pt)
+
+F1=as.factor(Treatments)
+F2=as.factor(Species)
+#bloco=as.factor(bloco)
+Trat=paste(F1,F2)
+dados=data.frame(F1,F2,resp=N)
+attach(dados)
+X="";Y=""
 
 kruskal.test(dados$F1, dados$resp)
 kruskal.test(dados$F2, dados$resp)
 
 
-############### P
+############### P ###############
 F1=as.factor(Treatments)
 F2=as.factor(Species)
 #bloco=as.factor(bloco)
@@ -936,11 +764,38 @@ plot1
 ggsave("plot7.pdf", width = 158, height = 93, units = "mm")
 ggsave("plot7.tiff", width = 158, height = 93, units = "mm")
 
-###### TESTE DE TUKEY  ######
+## Transformação em log
+dados$resp <- log(dados$resp)
+###### MODELO ######
 
-' ajustar o nível de significância (alfa) para corrigir o problema das múltiplas comparações '
+mod = with(dados, aov(resp~F1))
+anova(mod)
 
-(comparacao <- ea2(dados, design=2)) # fatorial duplo em blocos casualizados
+mod1 = with(dados, aov(resp~F2))
+anova(mod1)
+###### PRESSUPOSTOS ######
+
+# normalidade
+(norm=shapiro.test(mod$res))
+qqnorm(mod$res)
+
+# homogeneidade
+with(dados, leveneTest(mod$residuals~F1))
+with(dados, leveneTest(mod$residuals~F2))
+
+# Teste não paramétrico
+require(ExpDes.pt)
+
+F1=as.factor(Treatments)
+F2=as.factor(Species)
+#bloco=as.factor(bloco)
+Trat=paste(F1,F2)
+dados=data.frame(F1,F2,resp=P)
+attach(dados)
+X="";Y=""
+
+kruskal.test(dados$F1, dados$resp)
+kruskal.test(dados$F2, dados$resp)
 
 
 ############### K ###############
@@ -1043,6 +898,14 @@ with(dados, leveneTest(mod$residuals~F2))
 # Teste não paramétrico
 require(ExpDes.pt)
 
+F1=as.factor(Treatments)
+F2=as.factor(Species)
+#bloco=as.factor(bloco)
+Trat=paste(F1,F2)
+dados=data.frame(F1,F2,resp=K)
+attach(dados)
+X="";Y=""
+
 kruskal.test(dados$F1, dados$resp)
 kruskal.test(dados$F2, dados$resp)
 
@@ -1143,6 +1006,7 @@ qqnorm(mod$res)
 with(dados, leveneTest(mod$residuals~F1))
 with(dados, leveneTest(mod$residuals~F2))
 
+
 ############### Mg ###############
 
 F1=as.factor(Treatments)
@@ -1239,3 +1103,6 @@ qqnorm(mod$res)
 # homogeneidade
 with(dados, leveneTest(mod$residuals~F1))
 with(dados, leveneTest(mod$residuals~F2))
+
+TukeyHSD(mod)
+TukeyHSD(mod1)
