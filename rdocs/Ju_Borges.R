@@ -132,6 +132,8 @@ ggplot(dados) +
   ) +
   labs(x = "Interação", y = "K (g.kg-1)") +
   theme_estat()+
+  scale_x_discrete(labels = c("TM","SV","SR","PC","PB","OS","ML",'MB','MA','LH','LE','DH','DF','CA','AV','AND','AH')) +
+  facet_wrap(~F1, scales = "free_y", nrow = 1) +
   coord_flip()
 #ggsave("KboxInt.pdf", width = 158, height = 93, units = "mm")
 
@@ -275,6 +277,8 @@ ggplot(dados) +
   ) +
   labs(x = "Interação", y = "Ca (g.kg-1)") +
   theme_estat()+
+  scale_x_discrete(labels = c("TM","SV","SR","PC","PB","OS","ML",'MB','MA','LH','LE','DH','DF','CA','AV','AND','AH')) +
+  facet_wrap(~F1, scales = "free_y", nrow = 1) +
   coord_flip()
 #ggsave("CaboxInt.pdf", width = 158, height = 93, units = "mm")
 
@@ -413,6 +417,8 @@ ggplot(dados) +
   ) +
   labs(x = "Interação", y = "Mg (g.kg-1)") +
   theme_estat()+
+  scale_x_discrete(labels = c("TM","SV","SR","PC","PB","OS","ML",'MB','MA','LH','LE','DH','DF','CA','AV','AND','AH')) +
+  facet_wrap(~F1, scales = "free_y", nrow = 1) +
   coord_flip()
 #ggsave("MgboxInt.pdf", width = 158, height = 93, units = "mm")
 
@@ -565,6 +571,8 @@ ggplot(dados) +
   ) +
   labs(x = "Interação", y = "N (g.kg-1)") +
   theme_estat()+
+  scale_x_discrete(labels = c("TM","SV","SR","PC","PB","OS","ML",'MB','MA','LH','LE','DH','DF','CA','AV','AND','AH')) +
+  facet_wrap(~F1, scales = "free_y", nrow = 1) +
   coord_flip()
 #ggsave("NboxInt.pdf", width = 158, height = 93, units = "mm")
 
@@ -712,6 +720,8 @@ dados$resp <- log(dados$resp)
    ) +
    labs(x = "Interação", y = "P (g.kg-1)") +
    theme_estat()+
+   scale_x_discrete(labels = c("TM","SV","SR","PC","PB","OS","ML",'MB','MA','LH','LE','DH','DF','CA','AV','AND','AH')) +
+   facet_wrap(~F1, scales = "free_y", nrow = 1) +
    coord_flip()
  #ggsave("PboxInt.pdf", width = 158, height = 93, units = "mm")
  
@@ -870,9 +880,13 @@ Trat=paste(F1,F2)
 dados=data.frame(F1,F2,bloco,resp=E)
 attach(dados)
 X="";Y=""
-dados$bloco[20] <- 3
+
+hist(E)
+boxplot(E)
 
 dados$resp <- log(dados$resp)
+
+#dados<-dados[-c(20),]
 
 ###### ANÁLISE EXPLORATÓRIA ######
 
@@ -919,6 +933,8 @@ ggplot(dados) +
   ) +
   labs(x = "Interação", y = "Leaf Transpiration (E)") +
   theme_estat()+
+  scale_x_discrete(labels = c("TM","SV","SR","PC","PB","OS","ML",'MB','MA','LH','LE','DH','DF','CA','AV','AND','AH')) +
+  facet_wrap(~F1, scales = "free_y", nrow = 1) +
   coord_flip()
 #ggsave("EboxInt.pdf", width = 158, height = 93, units = "mm")
 
@@ -933,6 +949,8 @@ anova(mod)
 (norm=shapiro.test(mod$res))
 
 resíduos <- mod$residuals
+boxplot(resíduos)
+hist(resíduos)
 fit<- mod$fitted.values
 Res <- rstudent(mod)
 data<-data.frame(resíduos,fit,Res)
@@ -986,8 +1004,9 @@ ggplot(data) +
 
 ' Regra básica: Se Di ≥ 0, 80, a i-´esima observacao sera considerada
 influente.'
-cooks.distance(mod)
-indice<-c(1:181)
+k<-cooks.distance(mod)
+max(k)
+indice<-c(1:282)
 plot(indice,cooks.distance(mod), type = "l")
 plot(mod,which=4)
 
@@ -1007,7 +1026,6 @@ Trat=paste(F1,F2)
 dados=data.frame(F1,F2,bloco,resp=gs)
 attach(dados)
 X="";Y=""
-dados$bloco[20] <- 3
 min(gs)
 
 dados$resp <- log(dados$resp)
@@ -1045,7 +1063,6 @@ ggplot(dados) +
 #ggsave("gsboxEsp.pdf", width = 158, height = 93, units = "mm")
 
 # ambos os fatores (organizar em painel pra ficar mais claro)
-
 ggplot(dados) +
   aes(
     x = F1:F2,
@@ -1057,8 +1074,11 @@ ggplot(dados) +
   ) +
   labs(x = "Interação", y = "Stomatal Conductance (gs)") +
   theme_estat()+
+  scale_x_discrete(labels = c("TM","SV","SR","PC","PB","OS","ML",'MB','MA','LH','LE','DH','DF','CA','AV','AND','AH')) +
+  facet_wrap(~F1, scales = "free_y", nrow = 1) +
   coord_flip()
-#ggsave("gsboxInt.pdf", width = 158, height = 93, units = "mm")
+
+#ggsave("gsboxInt1.pdf", width = 158, height = 93, units = "mm")
 
 
 ###### MODELO ######
@@ -1126,8 +1146,9 @@ ggplot(data) +
 
 ' Regra básica: Se Di ≥ 0, 80, a i-´esima observacao sera considerada
 influente.'
-cooks.distance(mod)
-indice<-c(1:181)
+k<-cooks.distance(mod)
+max(k)
+indice<-c(1:282)
 plot(indice,cooks.distance(mod), type = "l")
 plot(mod,which=4)
 
@@ -1163,7 +1184,6 @@ Trat=paste(F1,F2)
 dados=data.frame(F1,F2,bloco,resp=A)
 attach(dados)
 X="";Y=""
-dados$bloco[20] <- 3
 
 dados$resp <- log(dados$resp)
 
@@ -1212,6 +1232,8 @@ ggplot(dados) +
   ) +
   labs(x = "Interação", y = "Net Photosynthesis (A)") +
   theme_estat()+
+  scale_x_discrete(labels = c("TM","SV","SR","PC","PB","OS","ML",'MB','MA','LH','LE','DH','DF','CA','AV','AND','AH')) +
+  facet_wrap(~F1, scales = "free_y", nrow = 1) +
   coord_flip()
 #ggsave("AboxInt.pdf", width = 158, height = 93, units = "mm")
 
@@ -1303,7 +1325,6 @@ Trat=paste(F1,F2)
 dados=data.frame(F1,F2,bloco,resp=EIUA)
 attach(dados)
 X="";Y=""
-dados$bloco[20] <- 3
 
 dados$resp <- log(dados$resp)
 
@@ -1352,6 +1373,8 @@ ggplot(dados) +
   ) +
   labs(x = "Interação", y = "Instantaneous Water Use Efficiency (EIUA)") +
   theme_estat()+
+  scale_x_discrete(labels = c("TM","SV","SR","PC","PB","OS","ML",'MB','MA','LH','LE','DH','DF','CA','AV','AND','AH')) +
+  facet_wrap(~F1, scales = "free_y", nrow = 1) +
   coord_flip()
 #ggsave("EIUAboxInt.pdf", width = 158, height = 93, units = "mm")
 
@@ -1422,7 +1445,7 @@ ggplot(data) +
 ' Regra básica: Se Di ≥ 0, 80, a i-´esima observacao sera considerada
 influente.'
 cooks.distance(mod)
-indice<-c(1:181)
+indice<-c(1:282)
 plot(indice,cooks.distance(mod), type = "l")
 plot(mod,which=4)
 
